@@ -45,11 +45,6 @@ INSTALLED_APPS = [
     'apps.membership',
     'phonenumber_field',
     'magiclink',
-    'django.contrib.sites',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google'
 ]
 
 MIDDLEWARE = [
@@ -126,13 +121,13 @@ AUTHENTICATION_BACKENDS = (
 )
 
 # Magic Link Config
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory' # Enforce email verification
-ACCOUNT_AUTHENTICATION_METHOD = 'email'  # use email, not username
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = False
-LOGIN_REDIRECT_URL = '/dashboard/'       # after successfull login
-SITE_ID = 1                              # required for allauth
+# ACCOUNT_EMAIL_VERIFICATION = 'mandatory' # Enforce email verification
+# ACCOUNT_AUTHENTICATION_METHOD = 'email'  # use email, not username
+# ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_UNIQUE_EMAIL = True
+# ACCOUNT_USERNAME_REQUIRED = False
+# LOGIN_REDIRECT_URL = '/dashboard/'       # after successfull login
+# SITE_ID = 1                              # required for allauth
 
 # Email Backend (Development)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # logs to console
