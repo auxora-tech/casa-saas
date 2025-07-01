@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.conf import settings
 
 # Create your views here.
-from . models import User_Model
+from apps.user.models import User_Model
 
 # =========================
 # Magic Link Token

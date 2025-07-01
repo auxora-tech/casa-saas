@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from phonenumber_field.modelfields import PhoneNumberField # type: ignore
+# from phonenumber_field.modelfields import PhoneNumberField # type: ignore
 from . managers import ClientManager
 from django.utils import timezone
 
@@ -15,7 +15,7 @@ class User_Model(AbstractBaseUser, PermissionsMixin):
         'Last Name', max_length=30, blank=False, null=False)
     work_email = models.EmailField(
         'Work Email', blank=False, null=False, unique=True)
-    phone = PhoneNumberField(null=False, blank=False, unique=True)
+    # phone = PhoneNumberField(null=False, blank=False, unique=True)
     email_verified = models.BooleanField('Email Verified', default=False)
 
     # Required fields for AbstractBaseUser
@@ -27,7 +27,7 @@ class User_Model(AbstractBaseUser, PermissionsMixin):
     updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'work_email'
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'phone']
+    REQUIRED_FIELDS = ['first_name', 'last_name']
 
     objects = ClientManager()  # custom manager
 

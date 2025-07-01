@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils import timezone
-from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.modelfields import PhoneNumberField # type: ignore
 from . constant import SUBSCRIPTION_PLAN
 from . constant import EMPLOYEE_RANGES
 from .constant import COUNTRIES
@@ -24,6 +24,7 @@ class Company(models.Model):
     website = models.URLField('Website', blank=True, null=True)
     phone = PhoneNumberField('Phone', blank=True, null=True)
     address = models.TextField('Address', blank=False, null=False)
+    description = models.TextField('Description', blank=True, null=True)
 
     # subscription fields
     subscription_plan = models.CharField(

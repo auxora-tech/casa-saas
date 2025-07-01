@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'apps.user',
-    'apps.auth',
+    'apps.authentication',
     'apps.company',
     'apps.membership',
     'phonenumber_field',
