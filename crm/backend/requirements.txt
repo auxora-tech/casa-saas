@@ -1,11 +1,22 @@
 asgiref==3.8.1
+certifi==2025.6.15
+cffi==1.17.1
+charset-normalizer==3.4.2
+cryptography==45.0.4
 Django==5.2.3
-django-allauth==65.9.0     # Handles email sending + token generation
 django-cors-headers==4.7.0
 django-magiclink==1.3.0
+django-phonenumber-field==8.1.0
 djangorestframework==3.16.0
+djangorestframework_simplejwt==5.5.0
+idna==3.10
 packaging==21.3
+phonenumbers==9.0.8
+pycparser==2.22
+PyJWT==1.7.1
 pyparsing==3.2.3
+requests==2.32.4
 sqlparse==0.5.3
 typing_extensions==4.14.0
 tzdata==2025.2
+urllib3==2.5.0

@@ -1,6 +1,7 @@
 ROLES = [
     # Admin for a spceific client (not Django admin superuser)
+    ('OWNER', 'Owner'),
     ('ADMIN', 'Client Admin'),
-    ('MANAGER', 'Manager'),     # Limited Access
-    ('STAFF', 'Staff')          # Basic Access
+    ('STAFF', 'Staff')     # Limited Access
+    ('VIEWER', 'Viewer')   # Basic Access
 ]

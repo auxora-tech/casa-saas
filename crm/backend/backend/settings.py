@@ -39,8 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'apps.user',
+    'apps.auth',
     'apps.company',
     'apps.membership',
     'phonenumber_field',
@@ -61,7 +63,15 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ROTATE_REFRESH_TOKENS': True,      # Generate new refresh token
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh token
 }
 
 ROOT_URLCONF = 'backend.urls'

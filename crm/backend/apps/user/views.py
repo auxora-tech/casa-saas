@@ -9,12 +9,13 @@ from django.template.loader import render_to_string
 from django.conf import settings
 from django.core.cache import cache
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated 
+from rest_framework_simplejwt.tokens import RefreshToken   # type:ignore
 from rest_framework.response import Response
 from rest_framework import status 
 
 # Create your views here.
-from . models import User_Model
+from . models import User_Model, LoginAttempt, UserSession, AuditLog
 from apps.company.models import Company
 from apps.membership.models import CompanyMembership
 
@@ -230,13 +231,13 @@ def send_magic_link(request):
             cache.set(ip_key, ip_attempts + 1, 3600) 
 
             # Log attempt
-            # LoginAttempt.objects.create(
-            #     email = email,
-            #     ip_address = ip_address,
-            #     user_agent = user_agent,
-            #     attempt_type = 'magic_link_sent',
-            #     success = True
-            # )
+            LoginAttempt.objects.create(
+                email = email,
+                ip_address = ip_address,
+                user_agent = user_agent,
+                attempt_type = 'magic_link_sent',
+                success = True
+            )
 
             messages = {
                 'login': 'Check your email! We\'ve sent you a secure login link.',
@@ -257,16 +258,115 @@ def send_magic_link(request):
             }, status=500)
     except Exception as e:
         # Log failed attempt
-        # LoginAttempt.objects.create(
-        #     email=email,
-        #     ip_address=ip_address,
-        #     user_agent=user_agent,
-        #     attempt_type='magic_link_failed',
-        #     success=False,
-        #     failure_reason=str(e)
-        # )
+        LoginAttempt.objects.create(
+            email=email,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            attempt_type='magic_link_failed',
+            success=False,
+            failure_reason=str(e)
+        )
 
         return Response({
             'error': 'Failed to send magic link. Please try again.',
             'details': str(e) if settings.DEBUG else None
         }, status=500)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_magic_link(request):
+    """
+    Verify magic link token and authenticate user
+    POST /api/auth/verify/
+    """
+
+    token = request.data.get('token')
+    device_fingerprint = request.data.get('device_fingerprint', '')
+
+    if not token:
+        return Response({'error': 'Token is required'}, status = 400)
+    
+    ip_address = get_client_ip(request)
+    user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+    try:
+        # Find and validate token 
+        magic_token = MagicLinkToken.objects.get(token = token)
+
+        if not magic_token.is_valid():
+            return Response({
+                'error': 'This link has expired or been used. Please request a new one.',
+                'expired': True,
+                'token_type': magic_token.token_type
+            }, status = 401)
+        
+        # Handle different token types
+        if magic_token.token_type == 'login':
+            return handle_magic_login(magic_token, request)
+        elif magic_token.token_type == 'register':
+            return handle_email_verification(magic_token, request)
+        elif magic_token.token_type == 'invite':
+            return handle_team_invalidation(magic_token, request)
+        else:
+            return Response({'error': 'Invalid token type'}, status = 400)
+        
+    except MagicLinkToken.DoesNotExist:
+        # Log failed attempt
+        LoginAttempt.objects.create(
+            email='unknown',
+            ip_address=ip_address,
+            user_agent=user_agent,
+            attempt_type='magic_link_verify_failed',
+            success=False,
+            failure_reason='Invalid token'
+        )
+
+        return Response({
+            'error': 'Invalid or expired link. Please request a new one.',
+            'invalid_token' : True
+        }, status=401)
+    
+
+def handle_magic_login(magic_token, request):
+    """Handle magic link login"""
+    if not magic_token.user:
+        return Response({
+            'error': 'No account found with this email.',
+            'redirect_to': 'register',
+            'email': magic_token.email
+        }, status=404)
+    
+    user = magic_token.user
+
+    # Security checks
+    if not user.is_active:
+        return Response({
+            'error': 'Account is deactivated. Contact support.'
+        }, status=403)
+    
+    if not user.email_verified:
+        # Send verification link 
+        send_verification_magic_link(user)
+        return Response({
+            'error': 'Please verify your email first. We\'ve sent a new verificiation link.',
+            'needs_verification': True,
+            'email': user.work_email
+        }, status=403)
+    
+    # Mark token as used
+    magic_token.mark_used() 
+
+    # Generate JWT tokens
+    refresh = RefreshToken.for_user(user)
+
+    # Create session tracking
+    session = UserSession.objects.create(
+        user = user,
+        device_fingerprint = magic_token.device_fingerprint,
+        ip_address = magic_token.ip_address,
+        user_agent = magic_token.user_agent,
+        is_active = True
+    )
+
+    # Get user's companies and roles
+    companies = user

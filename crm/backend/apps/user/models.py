@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from phonenumber_field.modelfields import PhoneNumberField
+from phonenumber_field.modelfields import PhoneNumberField # type: ignore
 from . managers import ClientManager
 from django.utils import timezone
 
@@ -16,6 +16,7 @@ class User_Model(AbstractBaseUser, PermissionsMixin):
     work_email = models.EmailField(
         'Work Email', blank=False, null=False, unique=True)
     phone = PhoneNumberField(null=False, blank=False, unique=True)
+    email_verified = models.BooleanField('Email Verified', default=False)
 
     # Required fields for AbstractBaseUser
     is_active = models.BooleanField(default=True)
@@ -65,3 +66,61 @@ class User_Model(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} {self.work_email}"
+
+class LoginAttempt(models.Model):
+    """Simple login attempt tracking"""
+    email = models.EmailField()
+    ip_address = models.GenericIPAddressField()
+    success = models.BooleanField()
+    attempt_type = models.CharField(max_length=30, default = 'magic_link')
+    created_at = models.DateTimeField(auto_now_add=True) 
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.email} - {'Success' if self.success else 'Failed'}"
+    
+
+class UserSession(models.Model):
+    """Basic user session tracking"""
+    user = models.ForeignKey(User_Model, on_delete=models.CASCADE, related_name='sessions')
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.user.work_email} - {self.created_at}"
+    
+
+class AuditLog(models.Model):
+    """Simple audit logging"""
+    user = models.ForeignKey(User_Model, on_delete=models.SET_NULL, null=True)
+    user_email = models.EmailField()
+    action = models.CharField(max_length=100)
+    description = models.TextField()
+    ip_address = models.GenericIPAddressField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    @classmethod
+    def log_action(cls, user, action, description, request = None):
+        """Helper to log actions"""
+        ip_address = '127.0.0.1'
+        if request:
+            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            if x_forwarded_for:
+                ip_address = x_forwarded_for.split(',')[0].strip()
+            else:
+                ip_address = request.META.get('REMOTE_ADDR', '127.0.0.1')
+
+        return cls.objects.create(
+            user = user,
+            user_email = user.work_email if user else 'system',
+            action = action,
+            description = description,
+            ip_address = ip_address
+        )
+    
+    def __str__(self):
+        return f"{self.user_email} - {self.action}"
