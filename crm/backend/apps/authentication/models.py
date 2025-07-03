@@ -64,6 +64,7 @@ class MagicLinkToken(models.Model):
         return f"{base_url}/auth/verify?token={self.token}&action={self.token_type}"
 
     def save(self, *args, **kwargs):
+        
         if not self.token:
             self.token = self.generate_secure_token()
         if not self.expires_at:

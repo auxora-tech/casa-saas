@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -45,12 +46,13 @@ INSTALLED_APPS = [
     'apps.authentication',
     'apps.company',
     'apps.membership',
+    'apps.participant',
     'phonenumber_field',
     'magiclink',
 ]
 
 MIDDLEWARE = [
-    'allauth.account.middleware.AccountMiddleware',
+    # 'allauth.account.middleware.AccountMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -105,6 +107,14 @@ DATABASES = {
 }
 
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -129,15 +139,6 @@ AUTHENTICATION_BACKENDS = (
     'magiclink.backends.MagicLinkBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
-
-# Magic Link Config
-# ACCOUNT_EMAIL_VERIFICATION = 'mandatory' # Enforce email verification
-# ACCOUNT_AUTHENTICATION_METHOD = 'email'  # use email, not username
-# ACCOUNT_EMAIL_REQUIRED = True
-# ACCOUNT_UNIQUE_EMAIL = True
-# ACCOUNT_USERNAME_REQUIRED = False
-# LOGIN_REDIRECT_URL = '/dashboard/'       # after successfull login
-# SITE_ID = 1                              # required for allauth
 
 # Email Backend (Development)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # logs to console
