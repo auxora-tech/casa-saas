@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-# from phonenumber_field.modelfields import PhoneNumberField # type: ignore
+from phonenumber_field.modelfields import PhoneNumberField # type: ignore
+from . import constant
 from . managers import ClientManager
 from django.utils import timezone
 
@@ -15,9 +16,23 @@ class User_Model(AbstractBaseUser, PermissionsMixin):
         'Last Name', max_length=30, blank=False, null=False)
     work_email = models.EmailField(
         'Work Email', blank=False, null=False, unique=True)
+    preferred_name = models.CharField(
+        'Preferred Name', max_length=100, blank=True)
+    date_of_birth = models.DateField(
+        'Date of Birth', blank=False, null=False)
+    slug = models.SlugField(unique=True, blank=True)
+
+    address = models.TextField(
+        'Address', max_length=500, blank=False, null=False)
+    suburb = models.CharField('Suburb', max_length=100, blank=True, choices=constant.AUSTRALIAN_SUBURBS)
+    state_territory = models.CharField('State or Territory', max_length=3, blank=True, choices=constant.AUSTRALIAN_STATES_AND_TERRITORIES)
+    postcode = models.CharField('Postcode', max_length=4, blank=True)
+    contact_number = PhoneNumberField(
+        blank=False, null=False, unique=True)
     # phone = PhoneNumberField(null=False, blank=False, unique=True)
     email_verified = models.BooleanField('Email Verified', default=False)
     password = models.CharField('Password', max_length=30, blank=True, null=True)
+    gender = models.CharField('Gender', max_length=20,blank=True, choices=constant.GENDER)
 
     # Required fields for AbstractBaseUser
     is_active = models.BooleanField(default=True)
@@ -25,7 +40,7 @@ class User_Model(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
 
     # Timestamp
-    date_joined = models.DateTimeField(default=timezone.now, auto_now=True)
+    date_joined = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = 'work_email'

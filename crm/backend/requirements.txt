@@ -12,6 +12,7 @@ djangorestframework_simplejwt==5.5.0
 idna==3.10
 packaging==21.3
 phonenumbers==9.0.8
+pillow==11.3.0
 pycparser==2.22
 PyJWT==1.7.1
 pyparsing==3.2.3
