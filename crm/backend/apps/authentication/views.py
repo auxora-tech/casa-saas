@@ -7,13 +7,15 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django.db import transaction
+# from django.db import transaction
 from django.core.mail import send_mail
 from rest_framework_simplejwt.tokens import RefreshToken  # type: ignore
 
-from apps.user.models import User_Model, LoginAttempt, UserSession, AuditLog
-from apps.company.models import Company
-from apps.membership.models import CompanyMembership
+from . serializers import SignupSerializer
+from apps.user.models import User_Model
+from apps.user.serializers import UserSerializer
+# from apps.company.models import Company
+# from apps.membership.models import CompanyMembership
 # from .utils import get_client_ip, send_magic_link_email
 # from . models import MagicLinkToken
 
@@ -30,26 +32,28 @@ from apps.membership.models import CompanyMembership
 
 User = get_user_model()
 
-class SignupView(APIView):
-    parser_classes = [permissions.AllowAny]
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signup(request):
+    """
+    Create a new user account
+    """
+    serialized_data = SignupSerializer(request.data)
+    if serialized_data.is_valid():
+        user = serialized_data.save()
+        return Response({
+            'message': f'{user.first_name} is successfully registered',
+            'user': {
+                'Id': user.id,
+                'First Name': user.first_name,
+                'Last Name': user.last_name,
+                'Email': user.work_email
+            }
+        }, status = status.HTTP_201_CREATED)
+    return Response(serialized_data.errors, status = status.HTTP_400_BAD_REQUEST)
 
-    def post(self, request):
-        data = request.data
-        user = User.objects.create_user(
-            work_email = data['work_email'],
-            first_name = data['first_name'],
-            last_name = data['last_name'],
-            password = data['password']
-        )
-        send_mail(
-            'Signup Successfull',
-            f'Welcome {user.first_name}!',
-            'noreply@auxoratech.com',
-            [user.work_email],
-            fail_silently=True
-        )
 
-        return Response({'message': 'User created successfully'}, status=201)
+
 
 
 # @api_view(['POST'])

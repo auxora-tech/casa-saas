@@ -123,7 +123,10 @@ MEDIA_ROOT = BASE_DIR/'media'
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
+
 AUTH_USER_MODEL = 'user.User_Model'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # for dev/testing
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
