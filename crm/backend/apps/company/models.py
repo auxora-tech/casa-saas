@@ -5,11 +5,15 @@ from . constant import SUBSCRIPTION_PLAN
 from . constant import EMPLOYEE_RANGES
 from .constant import COUNTRIES
 from . constant import COMPANY_CATEGORIES
+import uuid
 
 # Create your models here.
 
 
 class Company(models.Model):
+
+    id = models.AutoField(primary_key=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     title = models.CharField('Title', blank=False,
                              null=False, unique=True, max_length=100)

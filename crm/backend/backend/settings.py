@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'apps.membership',
     'apps.participant',
     'apps.employee',
+    'apps.document',
+    'apps.onboarding',
     'phonenumber_field',
     'magiclink',
 ]

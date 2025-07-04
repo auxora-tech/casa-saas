@@ -2,12 +2,15 @@ from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+import uuid 
 from phonenumber_field.modelfields import PhoneNumberField  # type: ignore
 
 User = get_user_model()
 
 
 class Participant(models.Model):
+    id = models.AutoField(primary_key=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     user = models.OneToOneField(
         User, related_name='Participant_Profile', on_delete=models.CASCADE)
     # Basic Info

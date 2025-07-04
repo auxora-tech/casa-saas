@@ -4,12 +4,17 @@ from phonenumber_field.modelfields import PhoneNumberField # type: ignore
 from . import constant
 from . managers import ClientManager
 from django.utils import timezone
+import uuid
 
 # Create your models here.
 
 
 class User_Model(AbstractBaseUser, PermissionsMixin):
 
+    id = models.AutoField(primary_key=True)
+
+    #A UUID(Universally Unique Identifier) is a 128-bit number used to uniquely identify objects across space and time.
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     first_name = models.CharField(
         'First Name', max_length=30, blank=False, null=False)
     last_name = models.CharField(

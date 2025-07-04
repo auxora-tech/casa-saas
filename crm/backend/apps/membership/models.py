@@ -2,11 +2,15 @@ from django.db import models
 from apps.company.models import Company
 from apps.user.models import User_Model
 from . constant import ROLES
+import uuid 
 
 # Create your models here.
 
 
 class CompanyMembership(models.Model):
+
+    id = models.AutoField(primary_key=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
     user = models.ForeignKey(
         User_Model, on_delete=models.CASCADE, related_name='memberships')
