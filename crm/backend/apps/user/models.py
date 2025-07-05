@@ -24,8 +24,8 @@ class User_Model(AbstractBaseUser, PermissionsMixin):
     preferred_name = models.CharField(
         'Preferred Name', max_length=100, blank=True)
     date_of_birth = models.DateField(
-        'Date of Birth', blank=False, null=False)
-    slug = models.SlugField(unique=True, blank=True)
+        'Date of Birth', blank=False, null=True)
+    # slug = models.SlugField(blank=True, null=True)
 
     address = models.TextField(
         'Address', max_length=500, blank=False, null=False)
@@ -33,14 +33,14 @@ class User_Model(AbstractBaseUser, PermissionsMixin):
     state_territory = models.CharField('State or Territory', max_length=3, blank=True, choices=constant.AUSTRALIAN_STATES_AND_TERRITORIES)
     postcode = models.CharField('Postcode', max_length=4, blank=True)
     contact_number = PhoneNumberField(
-        blank=False, null=False, unique=True)
+        blank=False, null=True, unique=True)
     # phone = PhoneNumberField(null=False, blank=False, unique=True)
     email_verified = models.BooleanField('Email Verified', default=False)
-    password = models.CharField('Password', max_length=30, blank=True, null=True)
+    # password = models.CharField('Password', max_length=30, blank=False, null=False)
     gender = models.CharField('Gender', max_length=20,blank=True, choices=constant.GENDER)
 
     # Required fields for AbstractBaseUser
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 

@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'apps.document',
     'apps.onboarding',
     'phonenumber_field',
-    'magiclink',
+    # 'magiclink',
 ]
 
 MIDDLEWARE = [
@@ -144,7 +144,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'magiclink.backends.MagicLinkBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 

@@ -8,22 +8,16 @@ from . constant import COMPANY_CATEGORIES
 import uuid
 
 # Create your models here.
-
-
 class Company(models.Model):
 
     id = models.AutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
-    title = models.CharField('Title', blank=False,
-                             null=False, unique=True, max_length=100)
-    category = models.CharField(
-        'Category', blank=False, null=False, max_length=50, choices=COMPANY_CATEGORIES)
-    no_of_employees = models.CharField(
-        'Number of Employees', null=False, blank=False, choices=EMPLOYEE_RANGES)
-    country = models.CharField(
-        'Country', max_length=50, choices=COUNTRIES, blank=False, null=False)
-    is_active = models.BooleanField('Is Active', default=True)
+    title = models.CharField('Title', blank=False,null=False, unique=True, max_length=100)
+    category = models.CharField('Category', blank=False, null=False, max_length=50, choices=COMPANY_CATEGORIES)
+    no_of_employees = models.CharField('Number of Employees', null=False, blank=False, choices=EMPLOYEE_RANGES)
+    country = models.CharField('Country', max_length=50, choices=COUNTRIES, blank=False, null=False)
+    is_active = models.BooleanField('Is Active', default=False)
 
     website = models.URLField('Website', blank=True, null=True)
     phone = PhoneNumberField('Phone', blank=True, null=True)
@@ -31,10 +25,8 @@ class Company(models.Model):
     description = models.TextField('Description', blank=True, null=True)
 
     # subscription fields
-    subscription_plan = models.CharField(
-        'Plan', max_length=20, default='FREE', choices=SUBSCRIPTION_PLAN)
-    subscription_expires = models.DateTimeField(
-        'Subscription Expires', null=True, blank=True)
+    subscription_plan = models.CharField('Plan', max_length=20, default='FREE', choices=SUBSCRIPTION_PLAN)
+    subscription_expires = models.DateTimeField('Subscription Expires', null=True, blank=True)
 
     # timestamp
     created_at = models.DateTimeField(auto_now_add=True)

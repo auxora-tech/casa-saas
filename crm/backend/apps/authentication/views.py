@@ -38,7 +38,7 @@ def signup(request):
     """
     Create a new user account
     """
-    serialized_data = SignupSerializer(request.data)
+    serialized_data = SignupSerializer(data = request.data)
     if serialized_data.is_valid():
         user = serialized_data.save()
         return Response({
@@ -52,6 +52,13 @@ def signup(request):
         }, status = status.HTTP_201_CREATED)
     return Response(serialized_data.errors, status = status.HTTP_400_BAD_REQUEST)
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def signin(request):
+    """
+    Authenticate and generate refresh and access tokens for a user
+    """
+    
 
 
 

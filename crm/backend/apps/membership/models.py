@@ -12,16 +12,13 @@ class CompanyMembership(models.Model):
     id = models.AutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
-    user = models.ForeignKey(
-        User_Model, on_delete=models.CASCADE, related_name='memberships')
-    company = models.ForeignKey(
-        Company, on_delete=models.CASCADE, related_name='memberships')
-    role = models.CharField('Role', default='STAFF',
-                            choices=ROLES, max_length=30)
-    is_active = models.BooleanField('Is Active', default=True)
+    user = models.ForeignKey(User_Model, on_delete=models.CASCADE, related_name='memberships')
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='memberships')
+    
+    role = models.CharField('Role', default='STAFF',choices=ROLES, max_length=30)
+    is_active = models.BooleanField('Is Active', default=False)
     joined_at = models.DateTimeField('Joined At', auto_now_add=True)
-    left_at = models.DateTimeField(
-        'Left At', auto_now=True, null=True, blank=True)
+    left_at = models.DateTimeField('Left At', auto_now=True, null=True, blank=True)
 
     class Meta:
         unique_together = ['user', 'company']

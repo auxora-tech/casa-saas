@@ -66,7 +66,7 @@ class ClientManager(BaseUserManager):
             raise ValidationError(errors)
 
     # creates a normal user
-    def create_user(self, work_email, first_name, last_name, password = None, **extra_fields):
+    def create_user(self, work_email, first_name, last_name, password, **extra_fields):
 
         # client's details validation
         if not first_name:
@@ -75,6 +75,8 @@ class ClientManager(BaseUserManager):
             raise ValueError("Last Name is required")
         if not work_email:
             raise ValueError("Email is required")
+        if not password:
+            raise ValueError("Password is required")
         
         try:
             validate_email(work_email)
@@ -85,18 +87,14 @@ class ClientManager(BaseUserManager):
         Normalize the email address by lowercasing the domain part of it.
         """
         work_email = self.normalize_email(work_email)
+        self.ValidatePassword(password)
+        # self.model() creates an instance of custom user model
         user = self.model(work_email=work_email, first_name=first_name, last_name=last_name, **extra_fields)
 
-        try:
-            self.ValidatePassword(password)
-            user.set_password(password)
-            user.save(using=self._db)    # specifies which database to save to
-            return user
+        user.set_password(password)
+        user.save(using=self._db)    # specifies which database to save to
+        return user
         
-        except Exception as e:
-            return Response({
-                'error': f'{e}, Password is not strong'
-            })
             
     
     def get_help_text(self):

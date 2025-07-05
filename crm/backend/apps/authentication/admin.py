@@ -1,4 +1,4 @@
 from django.contrib import admin
-from . models import MagicLinkToken
+# from . models import MagicLinkToken
 # Register your models here.
-admin.site.register(MagicLinkToken)
+# admin.site.register(MagicLinkToken)
