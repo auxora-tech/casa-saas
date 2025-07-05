@@ -14,7 +14,7 @@ from . models import Company
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def create(request):
 
     serialized_data = CompanySerializer(request.data)

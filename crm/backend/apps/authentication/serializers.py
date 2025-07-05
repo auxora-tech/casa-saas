@@ -15,7 +15,8 @@ class SignupSerializer(serializers.Serializer):
             work_email = validated_data.get('work_email'),
             first_name = validated_data['first_name'],
             last_name = validated_data['last_name'],
-            password = validated_data['password']
+            password = validated_data['password'],
+            is_active = True
         )
 
         user.save()
@@ -27,4 +28,4 @@ class SigninSerializer(serializers.Serializer):
     work_email = serializers.EmailField()
     password = serializers.CharField(write_only = True)
 
-    
+
