@@ -1,5 +1,5 @@
 ROLES = [
     ('CLIENT', 'Client'),
-    ('EMPLOYEE', 'Employee'),
+    ('SUPPORT_WORKER', 'Support_worker'),
     ('ADMIN', 'Admin'),
 ]
