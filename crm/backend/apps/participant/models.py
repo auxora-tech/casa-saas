@@ -3,6 +3,7 @@ from django.utils.text import slugify
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 import uuid 
+from . import constant
 from phonenumber_field.modelfields import PhoneNumberField  # type: ignore
 
 User = get_user_model()
@@ -14,11 +15,14 @@ class Participant(models.Model):
     user = models.OneToOneField(
         User, related_name='Participant_Profile', on_delete=models.CASCADE)
     # Basic Info
-    slug = models.SlugField(unique=True, blank=True)
-    photo = models.ImageField(
-        upload_to='media/profile_pictures/', blank=True, null=True)
+    preferred_name = models.CharField('Preferred Name', max_length=100, blank=True)
+    date_of_birth = models.DateField('Date of Birth', blank=False, null=True)
+    address = models.TextField('Address', max_length=500, blank=False, null=False)
+    photo = models.ImageField(upload_to='media/profile_pictures/', blank=True, null=True)
+    phone = PhoneNumberField(null=False, blank=False, unique=True)
 
     # Personal Details
+    gender = models.CharField('Gender', blank=True, choices=constant.GENDER)
     height = models.DecimalField('Height', blank=True, decimal_places=2, max_digits=5)
     weight = models.DecimalField('Weight', decimal_places=2, blank=True, max_digits=5)
     hair_colour = models.CharField('Hair Colour', max_length=50, blank=True)
