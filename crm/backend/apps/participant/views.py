@@ -8,7 +8,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
 from . models import Participant
+from apps.document.models import ServiceAgreement
 from apps.membership.models import CompanyMembership
+from apps.document.email_services import EmailService
 from decimal import Decimal
 from datetime import datetime
 
@@ -203,7 +205,7 @@ def get_client_profile(request):
 
 @api_view(['POST', 'PUT'])
 @permission_classes([IsAuthenticated])
-def create_update_client_profile(request):
+def create_update_client_profile_with_notification(request):
     """
     Create or update client profile
     URL: /api/client/profile/
@@ -340,6 +342,7 @@ def create_update_client_profile(request):
                 'religion_or_culture': 'religion_or_culture',
             }
 
+            # setattr() is a Python built-in function that dynamically sets attributes on objects.
             for api_field, model_field in optional_basic_fields.items():
                 if data.get(api_field) is not None:
                     setattr(participant, model_field, data[api_field])
@@ -432,35 +435,54 @@ def create_update_client_profile(request):
                 participant.emergency_contact_1, participant.emergency_contact_2
             ]
 
+            was_completed_before = participant.is_profile_completed
+
             if all(profile_completion_fields):
                 participant.is_profile_completed = True
 
             participant.save()
 
+            # send email notification if profile just became complete
+            if participant.is_profile_completed and not was_completed_before:
+                # profile just completed - send notification
+                email_sent = EmailService.send_profile_completion_notification(participant)
+                
+                # Also create service agreement record for tracking
+                ServiceAgreement.objects.get_or_create(
+                    participant = request.user,
+                    defaults = {
+                        'client_name': f'{request.user.first_name} {request.user.last_name}',
+                        'ndis_number': participant.ndis_number,
+                        'status': 'NOT_STARTED'
+                    }
+                )
+
             action = 'created' if created else 'updated'
 
-            return Response({
+            response_data = {
                 'success': True,
                 'message': f'Profile {action} successfully!',
                 'profile': {
                     'id': participant.id,
                     'uuid': str(participant.uuid),
-                    'ndis_number': participant.ndis_number,
-                    'preferred_name': participant.preferred_name,
                     'is_profile_completed': participant.is_profile_completed,
                 },
-                'action': action,
-                'next_steps': [
-                    'Your profile has been saved',
-                    'You can now access all NDIS services',
-                    'Support workers can view your care requirements'
-                ] if participant.is_profile_completed else [
-                    'Profile saved as draft',
-                    'Please complete remaining required fields',
-                    'Complete profile to access all features'
-                ]
-            }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+                'action': action
+            }
 
+            # Add notification info if profile was just completed
+            if participant.is_profile_completed and not was_completed_before:
+                response_data['profile_completed'] = True
+                response_data['next_steps'] = [
+                    'Your profile has been completed!',
+                    'Our team has been notified and will prepare your service agreement',
+                    'You will see a "Sign Agreement" button on your dashboard soon',
+                    'Check your dashboard in a few hours'
+                ]
+                response_data['admin_notified'] = email_sent
+
+            return Response(response_data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+        
     except ValueError as e:
         return Response({
             'error': 'Invalid data format',

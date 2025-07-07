@@ -1,18 +1,34 @@
 from django.db import models
-from django.contrib.auth import get_user_model
+# from django.contrib.auth import get_user_model
+from apps.participant.models import Participant
 import uuid
 
-User = get_user_model()
 
-# Create your models here.
-class Document(models.Model):
-    id = models.AutoField(primary_key=True)
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='documents')
-    title = models.CharField('Title', blank=False, null=False, max_length=100)
-    file = models.FileField('File', upload_to='media/documents')
-    # auto_now_add sets the field to the current date and time only when the object is first created
-    uploaded_at = models.DateTimeField('Uploaded At', auto_now_add=True)
+class ServiceAgreement(models.Model):
+    """
+    Database table to track service agreements
+    Each row = one client's agreement
+    """
 
-    def __str__(self):
-        return f"{self.title} - {self.user.work_email}"
+    # Which client this agreement belongs to
+    participant = models.ForeignKey(Participant, on_delete=models.CASCADE)
+
+    # Agreement status
+    status = models.CharField(max_length=30, choices=[
+        ('NOT_STARTED', 'Not Started'),      # Just created, no PandaDoc yet
+        ('SENT_FOR_SIGNATURE', 'Sent'),      # PandaDoc sent to client
+        ('SIGNED', 'Signed'),                # Client signed it
+        ('DECLINED', 'Declined'),            # Client declined
+    ])
+
+    # PandaDoc info
+    pandadoc_document_id = models.CharField(max_length=100, blank=True)
+    pandadoc_signing_url = models.URLField(blank=True)
+
+    # Client info
+    client_name = models.CharField(max_length=200)
+    ndis_number = models.CharField(max_length=50)
+
+    # When things happened
+    created_at = models.DateTimeField(auto_now_add=True)
+    signed_at = models.DateTimeField(null=True, blank=True)

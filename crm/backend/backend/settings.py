@@ -1,5 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -162,3 +163,24 @@ DEFAULT_COMPANY = {
     'address': '586 Port Rd, Allenby Gardens, SA 5009',
     'is_active': True
 }
+
+# In your settings.py
+PANDADOC_TEMPLATES = {
+    'NDIS_SERVICE_AGREEMENT': 'i6Tu7e78xvPdshQgTwbyoV' 
+}
+
+# Gmail SMTP (Simplest for testing)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'your-email@gmail.com')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'your-app-password')
+DEFAULT_FROM_EMAIL = 'Casa Community <noreply@casa-community.com>'
+
+# Admin notification settings
+ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'casacommunityau@gmail.com')
+NOTIFICATIOIN_EMAILS = [
+    'casacommunityau@gmail.com',
+    'taufeeq@auxoratech.com'
+]
