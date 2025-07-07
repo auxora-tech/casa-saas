@@ -2,10 +2,6 @@
 # EMAIL NOTIFICATION SYSTEM FOR PROFILE COMPLETION
 # ==========================================
 
-# ==========================================
-# EMAIL SERVICE CLASS
-# ==========================================
-
 # from apps.notifications.email_service import EmailService
 from django.core.mail import send_mail, EmailMultiAlternatives
 from rest_framework.decorators import api_view, permission_classes
@@ -19,6 +15,9 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 
+# ==========================================
+# EMAIL SERVICE CLASS
+# ==========================================
 
 class EmailService:
     """Handle all email notifications"""
@@ -35,29 +34,29 @@ class EmailService:
 
             # Email content
             message = f"""
-🎉 NEW CLIENT PROFILE COMPLETED
+            🎉 NEW CLIENT PROFILE COMPLETED
 
-Client Details:
-• Name: {participant.user.first_name} {participant.user.last_name}
-• Email: {participant.user.work_email}
-• Phone: {participant.phone}
-• NDIS Number: {participant.ndis_number}
-• Address: {participant.address}
-• Plan Period: {participant.ndis_plan_start} to {participant.ndis_plan_end}
-• Profile Completed: {participant.updated_at.strftime('%d/%m/%Y at %I:%M %p')}
+            Client Details:
+            • Name: {participant.user.first_name} {participant.user.last_name}
+            • Email: {participant.user.work_email}
+            • Phone: {participant.phone}
+            • NDIS Number: {participant.ndis_number}
+            • Address: {participant.address}
+            • Plan Period: {participant.ndis_plan_start} to {participant.ndis_plan_end}
+            • Profile Completed: {participant.updated_at.strftime('%d/%m/%Y at %I:%M %p')}
 
-NEXT STEPS:
-1. Create service agreement in PandaDoc using your template
-2. Fill in client details from above
-3. Send agreement to: {participant.user.work_email}
-4. Client will sign and system will auto-update
+            NEXT STEPS:
+            1. Create service agreement in PandaDoc using your template
+            2. Fill in client details from above
+            3. Send agreement to: {participant.user.work_email}
+            4. Client will sign and system will auto-update
 
-CLIENT DASHBOARD: 
-Your client can track progress at: https://your-domain.com/client/dashboard/
+            CLIENT DASHBOARD: 
+            Your client can track progress at: https://your-domain.com/client/dashboard/
 
----
-Casa Community CRM System
-            """
+            ---
+            Casa Community CRM System
+                        """
 
             # Send email to all admin addresses
             send_mail(
@@ -73,317 +72,226 @@ Casa Community CRM System
             print(e)
             return False
 
-# ==========================================
-# UPDATED PROFILE VIEWS WITH EMAIL NOTIFICATION
-# ==========================================
+    # ==========================================
+    # UPDATED WEBHOOK FOR PANDADOC COMPLETION
+    # ==========================================
 
 
-# apps/auth/views.py - Update your existing profile view
+    @api_view(['POST'])
+    @permission_classes([])
+    def pandadoc_webhook_with_notification(request):
+        """
+        Enhanced webhook that also sends completion notification
+        """
+
+        try:
+            webhook_data = request.data
+            event_type = webhook_data.get('event_type')
+            document_data = webhook_data.get('data', {})
+            document_id = document_data.get('id')
+
+            if not document_id:
+                return Response({'error': 'No document ID'}, status=400)
+
+            # Find agreement by PandaDoc document ID
+            try:
+                agreement = ServiceAgreement.objects.get(
+                    pandadoc_document_id=document_id)
+            except ServiceAgreement.DoesNotExist:
+                return Response({'status': 'ignored - document not in system'})
+
+            # Update status based on webhook event
+            if event_type == 'document.completed':
+                from django.utils import timezone
+                agreement.status = 'SIGNED'
+                agreement.signed_at = timezone.now()
+                agreement.save()
+
+                # Send completion notification to admin
+                EmailService.send_agreement_completed_notification(agreement)
+
+                # logger.info(f"Agreement signed by {agreement.client_name}")
+
+            elif event_type == 'document.declined':
+                agreement.status = 'DECLINED'
+                agreement.save()
+
+                # Send declined notification to admin
+                EmailService.send_agreement_declined_notification(agreement)
+
+            return Response({'status': 'success'})
+
+        except Exception as e:
+            # logger.error(f"Webhook error: {str(e)}")
+            return Response({'error': 'Processing failed'}, status=500)
+
+    # ==========================================
+    # ADDITIONAL EMAIL NOTIFICATIONS
+    # ==========================================
+
+    # Add these methods to EmailService class
 
 
-@api_view(['POST', 'PUT'])
-@permission_classes([IsAuthenticated])
-def create_update_client_profile_with_notification(request):
-    """
-    Updated profile view that sends email notification when completed
-    """
+    def send_agreement_completed_notification(agreement):
+        """Send notification when client signs agreement"""
+        try:
+            subject = f'✅ Service Agreement Signed - {agreement.client_name}'
 
-    # ... existing profile creation/update logic ...
+            message = f"""
+    🎉 SERVICE AGREEMENT COMPLETED!
 
-    try:
-        with transaction.atomic():
-            # Get or create participant profile
-            participant, created = Participant.objects.get_or_create(
-                user=request.user,
-                defaults={
-                    # ... your existing defaults ...
-                }
+    Client: {agreement.client_name}
+    NDIS Number: {agreement.ndis_number}
+    Signed: {agreement.signed_at.strftime('%d/%m/%Y at %I:%M %p')}
+
+    STATUS: Onboarding Complete ✅
+
+    The client's dashboard now shows "Welcome to Casa Community!"
+    You can now:
+    • Schedule their first support session
+    • Assign support workers
+    • Begin service delivery
+
+    Client Dashboard: https://your-domain.com/client/dashboard/
+
+    ---
+    Casa Community CRM System
+            """
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=settings.NOTIFICATION_EMAILS,
+                fail_silently=False,
             )
 
-            # ... existing field updates ...
+            return True
 
-            # Check if profile is completed
-            profile_completion_fields = [
-                participant.date_of_birth, participant.address, participant.phone,
-                participant.ndis_number, participant.ndis_plan_start, participant.ndis_plan_end,
-                participant.emergency_contact_1, participant.emergency_contact_2
-            ]
-
-            was_completed_before = participant.is_profile_completed
-
-            if all(profile_completion_fields):
-                participant.is_profile_completed = True
-
-            participant.save()
-
-            # Send email notification if profile just became complete
-            if participant.is_profile_completed and not was_completed_before:
-                # Profile just completed - send notification!
-                email_sent = EmailService.send_profile_completion_notification_html(
-                    participant)
-
-                # Also create service agreement record for tracking
-                ServiceAgreement.objects.get_or_create(
-                    participant=request.user,
-                    defaults={
-                        'client_name': f'{request.user.first_name} {request.user.last_name}',
-                        'ndis_number': participant.ndis_number,
-                        'status': 'NOT_STARTED'
-                    }
-                )
-
-            action = 'created' if created else 'updated'
-
-            response_data = {
-                'success': True,
-                'message': f'Profile {action} successfully!',
-                'profile': {
-                    'id': participant.id,
-                    'uuid': str(participant.uuid),
-                    'is_profile_completed': participant.is_profile_completed,
-                },
-                'action': action
-            }
-
-            # Add notification info if profile was just completed
-            if participant.is_profile_completed and not was_completed_before:
-                response_data['profile_completed'] = True
-                response_data['next_steps'] = [
-                    'Your profile has been completed!',
-                    'Our team has been notified and will prepare your service agreement',
-                    'You will see a "Sign Agreement" button on your dashboard soon',
-                    'Check your dashboard in a few hours'
-                ]
-                response_data['admin_notified'] = email_sent
-
-            return Response(response_data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
-
-    except Exception as e:
-        return Response({
-            'error': 'Failed to save profile',
-            'details': str(e)
-        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-# ==========================================
-# UPDATED WEBHOOK FOR PANDADOC COMPLETION
-# ==========================================
+        except Exception as e:
+            # logger.error(f"Failed to send agreement completion email: {str(e)}")
+            return False
 
 
-@api_view(['POST'])
-@permission_classes([])
-def pandadoc_webhook_with_notification(request):
-    """
-    Enhanced webhook that also sends completion notification
-    """
-
-    try:
-        webhook_data = request.data
-        event_type = webhook_data.get('event_type')
-        document_data = webhook_data.get('data', {})
-        document_id = document_data.get('id')
-
-        if not document_id:
-            return Response({'error': 'No document ID'}, status=400)
-
-        # Find agreement by PandaDoc document ID
+    def send_agreement_declined_notification(agreement):
+        """Send notification when client declines agreement"""
         try:
-            agreement = ServiceAgreement.objects.get(
-                pandadoc_document_id=document_id)
-        except ServiceAgreement.DoesNotExist:
-            return Response({'status': 'ignored - document not in system'})
+            subject = f'❌ Service Agreement Declined - {agreement.client_name}'
 
-        # Update status based on webhook event
-        if event_type == 'document.completed':
-            from django.utils import timezone
-            agreement.status = 'SIGNED'
-            agreement.signed_at = timezone.now()
-            agreement.save()
+            message = f"""
+    ⚠️ SERVICE AGREEMENT DECLINED
 
-            # Send completion notification to admin
-            EmailService.send_agreement_completed_notification(agreement)
+    Client: {agreement.client_name}
+    NDIS Number: {agreement.ndis_number}
+    Email: {agreement.participant.work_email}
 
-            # logger.info(f"Agreement signed by {agreement.client_name}")
+    ACTION REQUIRED:
+    • Contact client to discuss concerns
+    • Review agreement terms
+    • Send revised agreement if needed
 
-        elif event_type == 'document.declined':
-            agreement.status = 'DECLINED'
-            agreement.save()
+    Client Contact: {agreement.participant.work_email}
 
-            # Send declined notification to admin
-            EmailService.send_agreement_declined_notification(agreement)
+    ---
+    Casa Community CRM System
+            """
 
-        return Response({'status': 'success'})
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=settings.NOTIFICATION_EMAILS,
+                fail_silently=False,
+            )
 
-    except Exception as e:
-        # logger.error(f"Webhook error: {str(e)}")
-        return Response({'error': 'Processing failed'}, status=500)
+            return True
 
-# ==========================================
-# ADDITIONAL EMAIL NOTIFICATIONS
-# ==========================================
+        except Exception as e:
+            # logger.error(f"Failed to send agreement declined email: {str(e)}")
+            return False
 
-# Add these methods to EmailService class
-
-
-def send_agreement_completed_notification(agreement):
-    """Send notification when client signs agreement"""
-    try:
-        subject = f'✅ Service Agreement Signed - {agreement.client_name}'
-
-        message = f"""
-🎉 SERVICE AGREEMENT COMPLETED!
-
-Client: {agreement.client_name}
-NDIS Number: {agreement.ndis_number}
-Signed: {agreement.signed_at.strftime('%d/%m/%Y at %I:%M %p')}
-
-STATUS: Onboarding Complete ✅
-
-The client's dashboard now shows "Welcome to Casa Community!"
-You can now:
-• Schedule their first support session
-• Assign support workers
-• Begin service delivery
-
-Client Dashboard: https://your-domain.com/client/dashboard/
-
----
-Casa Community CRM System
-        """
-
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=settings.NOTIFICATION_EMAILS,
-            fail_silently=False,
-        )
-
-        return True
-
-    except Exception as e:
-        # logger.error(f"Failed to send agreement completion email: {str(e)}")
-        return False
+    # ==========================================
+    # ENVIRONMENT VARIABLES
+    # ==========================================
 
 
-def send_agreement_declined_notification(agreement):
-    """Send notification when client declines agreement"""
-    try:
-        subject = f'❌ Service Agreement Declined - {agreement.client_name}'
+    """
+    Add to your .env file:
 
-        message = f"""
-⚠️ SERVICE AGREEMENT DECLINED
+    # Email Settings (Gmail example)
+    EMAIL_HOST_USER=your-gmail@gmail.com
+    EMAIL_HOST_PASSWORD=your-app-password
 
-Client: {agreement.client_name}
-NDIS Number: {agreement.ndis_number}
-Email: {agreement.participant.work_email}
+    # Admin Notifications
+    ADMIN_EMAIL=admin@casa-community.com
+    NOTIFICATION_EMAILS=admin@casa-community.com,hr@casa-community.com
 
-ACTION REQUIRED:
-• Contact client to discuss concerns
-• Review agreement terms
-• Send revised agreement if needed
+    # PandaDoc
+    PANDADOC_API_KEY=your-pandadoc-key
+    """
 
-Client Contact: {agreement.participant.work_email}
+    # ==========================================
+    # GMAIL SETUP INSTRUCTIONS
+    # ==========================================
 
----
-Casa Community CRM System
-        """
+    """
+    GMAIL SETUP (Easiest for testing):
 
-        send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=settings.NOTIFICATION_EMAILS,
-            fail_silently=False,
-        )
+    1. Enable 2-Factor Authentication on your Gmail account
+    2. Generate App Password:
+    - Go to Google Account Settings
+    - Security → 2-Step Verification → App Passwords
+    - Generate password for "Mail"
+    - Use this password in EMAIL_HOST_PASSWORD
 
-        return True
+    3. Add to .env:
+    EMAIL_HOST_USER=your-email@gmail.com
+    EMAIL_HOST_PASSWORD=generated-app-password
 
-    except Exception as e:
-        # logger.error(f"Failed to send agreement declined email: {str(e)}")
-        return False
+    4. Test email:
+    python manage.py shell
+    >>> from django.core.mail import send_mail
+    >>> send_mail('Test', 'Hello', 'from@gmail.com', ['to@email.com'])
 
-# ==========================================
-# ENVIRONMENT VARIABLES
-# ==========================================
+    PRODUCTION: Use SendGrid, Mailgun, or AWS SES for professional email delivery
+    """
 
+    # ==========================================
+    # COMPLETE WORKFLOW SUMMARY
+    # ==========================================
 
-"""
-Add to your .env file:
+    """
+    PERFECT AUTOMATED WORKFLOW:
 
-# Email Settings (Gmail example)
-EMAIL_HOST_USER=your-gmail@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
+    1. CLIENT COMPLETES PROFILE:
+    ✅ Profile saved in database
+    ✅ is_profile_completed = True
+    ✅ Email sent to admin team
+    ✅ ServiceAgreement record created
 
-# Admin Notifications
-ADMIN_EMAIL=admin@casa-community.com
-NOTIFICATION_EMAILS=admin@casa-community.com,hr@casa-community.com
+    2. ADMIN GETS EMAIL NOTIFICATION:
+    📧 "New Client Profile Completed - John Smith"
+    📋 All client details included
+    🔗 Direct link to PandaDoc
 
-# PandaDoc
-PANDADOC_API_KEY=your-pandadoc-key
-"""
+    3. ADMIN CREATES AGREEMENT (3 minutes):
+    📄 Open PandaDoc dashboard
+    📝 Create from template
+    ✉️ Send to client email
+    📋 Copy signing URL to system
 
-# ==========================================
-# GMAIL SETUP INSTRUCTIONS
-# ==========================================
+    4. CLIENT SIGNS AGREEMENT:
+    🖱️ Click "Sign Agreement" button on dashboard
+    ✍️ Sign in PandaDoc
+    ✅ Document completed
 
-"""
-GMAIL SETUP (Easiest for testing):
+    5. SYSTEM AUTO-UPDATES:
+    🎣 Webhook receives completion notification
+    💾 Database updated: status = 'SIGNED'
+    📧 Admin gets "Agreement Signed" email
+    🎉 Client dashboard shows "Onboarding Complete!"
 
-1. Enable 2-Factor Authentication on your Gmail account
-2. Generate App Password:
-   - Go to Google Account Settings
-   - Security → 2-Step Verification → App Passwords
-   - Generate password for "Mail"
-   - Use this password in EMAIL_HOST_PASSWORD
-
-3. Add to .env:
-   EMAIL_HOST_USER=your-email@gmail.com
-   EMAIL_HOST_PASSWORD=generated-app-password
-
-4. Test email:
-   python manage.py shell
-   >>> from django.core.mail import send_mail
-   >>> send_mail('Test', 'Hello', 'from@gmail.com', ['to@email.com'])
-
-PRODUCTION: Use SendGrid, Mailgun, or AWS SES for professional email delivery
-"""
-
-# ==========================================
-# COMPLETE WORKFLOW SUMMARY
-# ==========================================
-
-"""
-PERFECT AUTOMATED WORKFLOW:
-
-1. CLIENT COMPLETES PROFILE:
-   ✅ Profile saved in database
-   ✅ is_profile_completed = True
-   ✅ Email sent to admin team
-   ✅ ServiceAgreement record created
-
-2. ADMIN GETS EMAIL NOTIFICATION:
-   📧 "New Client Profile Completed - John Smith"
-   📋 All client details included
-   🔗 Direct link to PandaDoc
-
-3. ADMIN CREATES AGREEMENT (3 minutes):
-   📄 Open PandaDoc dashboard
-   📝 Create from template
-   ✉️ Send to client email
-   📋 Copy signing URL to system
-
-4. CLIENT SIGNS AGREEMENT:
-   🖱️ Click "Sign Agreement" button on dashboard
-   ✍️ Sign in PandaDoc
-   ✅ Document completed
-
-5. SYSTEM AUTO-UPDATES:
-   🎣 Webhook receives completion notification
-   💾 Database updated: status = 'SIGNED'
-   📧 Admin gets "Agreement Signed" email
-   🎉 Client dashboard shows "Onboarding Complete!"
-
-TOTAL ADMIN TIME: 3 minutes per client
-TOTAL DEVELOPMENT TIME: 2-3 hours setup
-CLIENT EXPERIENCE: Seamless and professional
-"""
+    TOTAL ADMIN TIME: 3 minutes per client
+    TOTAL DEVELOPMENT TIME: 2-3 hours setup
+    CLIENT EXPERIENCE: Seamless and professional
+    """
