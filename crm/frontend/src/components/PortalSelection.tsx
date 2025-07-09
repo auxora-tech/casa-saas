@@ -3,9 +3,9 @@ import { Users, Briefcase } from 'lucide-react';
 const PortalSelection = () => {
     const handlePortalSelect = (portalType: 'client' | 'employee') => {
         if (portalType === 'client') {
-            window.location.href = 'auth/client/signin';
+            window.location.href = '/client/login';
         } else {
-            window.location.href = 'auth/employee/signin';
+            window.location.href = '/employee/login';
         }
     };
 

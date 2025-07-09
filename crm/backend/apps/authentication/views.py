@@ -145,7 +145,7 @@ def client_signup(request):
 def employee_signup(request):
     """
     Employee signup - automatically creates EMPLOYEE role
-    URL: /api/employee/auth/signup/
+    URL: /api/auth/employee/signup/
     
     Expected payload:
     {
@@ -169,11 +169,11 @@ def employee_signup(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # validate employee email domain
-    if not work_email.endswith('@casa-community.com'):
-        return Response({
-            'error': 'Employee account must use a Casa Community email address (@casa-community.com)',
-            'help': 'If you\re an NDIS participant, please use the participant portal.'
-        }, status = status.HTTP_400_BAD_REQUEST)
+    # if not work_email.endswith('@casa-community.com'):
+    #     return Response({
+    #         'error': 'Employee account must use a Casa Community email address (@casa-community.com)',
+    #         'help': 'If you\re an NDIS participant, please use the participant portal.'
+    #     }, status = status.HTTP_400_BAD_REQUEST)
     
     
     # check if user already exists
@@ -189,7 +189,7 @@ def employee_signup(request):
             return Response({
                 'error': 'You already have an employee account. Please signin instead.',
                 'action': 'signin',
-                'signin_url': '/employee/signin/'
+                'signin_url': '/auth/employee/signin/'
             }, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({
@@ -281,7 +281,7 @@ def client_signin(request):
     
     # Authenticate User
     try:
-        user = authenticate(request, work_email = work_email, password = password)
+        user = authenticate(request, username = work_email, password = password)
 
         if user is not None:
             # check if account is active
@@ -295,7 +295,10 @@ def client_signin(request):
                     user = user,
                     company__title = settings.DEFAULT_COMPANY['title'],
                     role = 'CLIENT'
-                )
+                ).first()
+            # The issue: You're using .filter() which never raises DoesNotExist. 
+            # The filter() method returns an empty queryset if no results are found, but it doesn't raise an exception.
+            # therefore use filter().first()
             except CompanyMembership.DoesNotExist:
                 return Response({
                     'error': 'Access denied. Client account required.'
@@ -637,6 +640,43 @@ def admin_get_employees(request):
             'MANAGER': len([e for e in employees if e['role'] == 'MANAGER']),
             'SUPPORT_WORKER': len([e for e in employees if e['role'] == 'SUPPORT_WORKER']),
             'EMPLOYEE': len([e for e in employees if e['role'] == 'EMPLOYEE'])
+        }
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_get_current_user(request):
+    """
+    Get current authenticated user details
+    URL: /api/user/profile/
+    """
+    user = request.user
+    # Get user's membershipt to determine role
+    try:
+        membership = CompanyMembership.objects.filter(
+            user = user,
+            company__title = settings.DEFAULT_COMPANY['title']
+        )
+        role = membership.role
+        user_type = 'client' if role == 'CLIENT' else 'employee'
+    except CompanyMembership.DoesNotExist:
+        return Response({
+            'error': "User membership not found"
+        }, status=status.HTTP_404_NOT_FOUND)
+    
+    return Response({
+        'user': {
+            'id': user.id,
+            'email': user.work_email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': role
+        },
+        'user_type': user_type,
+        'membership': {
+            'company': membership.company.title,
+            'role': membership.role,
+            'is_active': membership.is_active
         }
     })
 

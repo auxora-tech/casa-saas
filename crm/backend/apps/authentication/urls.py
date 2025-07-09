@@ -12,5 +12,6 @@ urlpatterns = [
     path('employee/add/', views.admin_add_employee, name='admin_add_employee'),
     path('employees/', views.admin_get_employees, name='admin_get_employee'),
     path('employee/update/', views.admin_update_employee, name='admin_update_employee'),
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh')
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('user/profile/', views.admin_get_current_user, name='get_current_user'),
 ]

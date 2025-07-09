@@ -13,6 +13,6 @@ class UserSerializer(ModelSerializer):
         fields = ['id', 'work_email', 'first_name',
                   'last_name', 'phone', 'date_joined', 'is_active']
         extra_kwargs = {
-            'work_email': {'read_only': True},
+            # 'work_email': {'read_only': True},
             'date_joined': {'read_only': True}
         }

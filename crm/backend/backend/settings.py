@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     # 'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -52,6 +53,53 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+# CORS Configuration
+# For development only - allows all origins
+CORS_ALLOW_ALL_ORIGINS = True
+
+# For PRODUCTION - specify exact origins
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+#     "https://your-production-domain.com",
+# ]
+
+# Optional: Allow specific subdomains
+# CORS_ALLOWED_ORIGIN_REGEXES = [
+#     r"^https://\w+\.your-domain\.com$",
+# ]
+
+# Allow credentials for (JWT tokens)
+CORS_ALLOW_CREDENTIALS = True
+
+# Allowed headers (Important for JWT)
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with'
+]
+
+# Allowed methods
+CORS_ALLOWED_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# For JWT tokens in headers
+CORS_EXPOSE_HEADERS = [
+    'authorization'
 ]
 
 REST_FRAMEWORK = {
@@ -128,6 +176,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
+    'apps.user.backends.EmailAuthBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -184,3 +233,9 @@ NOTIFICATIOIN_EMAILS = [
     'casacommunityau@gmail.com',
     'taufeeq@auxoratech.com'
 ]
+
+# Browsers have a security rule: "A website can only talk to servers on the same domain/port by default."
+# Since your React app(port 3000) and Django API(port 8000) are on different ports, the browser says "NOPE! This looks suspicious, I won't allow it!"
+# What CORS Does:
+# CORS is like a permission slip that your Django server gives to the browser saying:
+# "Hey browser, it's totally fine for websites from localhost:3000 to talk to me. I trust them!"

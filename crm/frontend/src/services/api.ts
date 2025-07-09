@@ -8,6 +8,10 @@ const api = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    withCredentials: true, // Important for CORS with credentials
+    // Without timeout, if your server is down or super slow, your React app would wait forever(literally). 
+    // Your users would see a loading spinner that never stops spinning
+    timeout: 10000, // 10 second timeout
 });
 
 // Add auth token to requests
@@ -31,6 +35,11 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+        // Handle CORS errors
+        if (error.code === 'ERR_NETWORK') {
+            console.error('Network error - possible CORS issues:', error);
+            throw new Error('Cannot connect to server. Please check if backend is running.')
+        }
         // The _ prefix is a JavaScript convention to mark a property as "private" or "internal."
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
@@ -38,7 +47,7 @@ api.interceptors.response.use(
             const refreshToken = localStorage.getItem('refresh_token');
             if (refreshToken) {
                 try {
-                    const response = await axios.post(`${API_BASE_URL}/token/refresh/`, {
+                    const response = await axios.post(`${API_BASE_URL}/auth/token/refresh/`, {
                         refresh: refreshToken,
                     });
                     const newAccessToken = response.data.access;
