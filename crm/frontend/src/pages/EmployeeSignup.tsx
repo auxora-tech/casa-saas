@@ -44,7 +44,7 @@ interface ApiErrorResponse {
 }
 
 // Constants
-const CASA_COMMUNITY_DOMAIN = '@casa-community.com';
+// const CASA_COMMUNITY_DOMAIN = '@casa-community.com';
 const MIN_NAME_LENGTH = 2;
 const MAX_NAME_LENGTH = 30;
 
@@ -190,7 +190,7 @@ const EmployeeSignup: React.FC = () => {
         const email = formData.work_email.toLowerCase();
         return {
             isValid: /\S+@\S+\.\S+/.test(email),
-            isCasaEmail: email.endsWith(CASA_COMMUNITY_DOMAIN),
+            // isCasaEmail: email.endsWith(CASA_COMMUNITY_DOMAIN),
             isEmpty: email.trim() === ''
         };
     }, [formData.work_email]);
@@ -214,7 +214,7 @@ const EmployeeSignup: React.FC = () => {
         }
 
         // Real-time email validation
-        if (name === 'work_email' && value.trim() && !value.toLowerCase().endsWith(CASA_COMMUNITY_DOMAIN)) {
+        if (name === 'work_email' && value.trim()) {
             setErrors(prev => ({
                 ...prev,
                 work_email: 'Please use your Casa Community email address'
@@ -275,9 +275,9 @@ const EmployeeSignup: React.FC = () => {
             newErrors.work_email = 'Work email is required';
         } else if (!emailValidation.isValid) {
             newErrors.work_email = 'Please enter a valid email address';
-        } else if (!emailValidation.isCasaEmail) {
-            newErrors.work_email = 'Please use your Casa Community email address (@casa-community.com)';
-        }
+        } // else if (!emailValidation.isCasaEmail) {
+        //     newErrors.work_email = 'Please use your Casa Community email address (@casa-community.com)';
+        // }
 
         // Password validation
         if (!formData.password) {
@@ -488,7 +488,7 @@ const EmployeeSignup: React.FC = () => {
                 {/* Signup Form */}
                 <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
                     {/* Info Banner */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                    {/* <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                         <div className="flex items-start">
                             <Info className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                             <div className="text-sm">
@@ -498,7 +498,7 @@ const EmployeeSignup: React.FC = () => {
                                 </p>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* General Error */}
                     {errors.general && (
@@ -570,12 +570,14 @@ const EmployeeSignup: React.FC = () => {
                             {/* Email validation feedback */}
                             {formData.work_email && !emailValidation.isEmpty && (
                                 <div className="mt-1">
-                                    {emailValidation.isCasaEmail ? (
-                                        <p className="text-xs text-green-600 flex items-center">
-                                            <CheckCircle className="w-3 h-3 mr-1" />
-                                            Valid Casa Community email
-                                        </p>
-                                    ) : emailValidation.isValid ? (
+                                    {
+                                    //     emailValidation.isCasaEmail ? (
+                                    //     <p className="text-xs text-green-600 flex items-center">
+                                    //         <CheckCircle className="w-3 h-3 mr-1" />
+                                    //         Valid Casa Community email
+                                    //     </p>
+                                    // ) :
+                                        emailValidation.isValid ? (
                                         <p className="text-xs text-orange-600">
                                             Please use your @casa-community.com email address
                                         </p>
@@ -740,7 +742,7 @@ const EmployeeSignup: React.FC = () => {
                         <Button
                             type="submit"
                             loading={loading}
-                            disabled={!formData.agreeToTerms || !passwordStrength.isStrong || !emailValidation.isCasaEmail}
+                            disabled={!formData.agreeToTerms || !passwordStrength.isStrong}
                             className="mt-6"
                             aria-describedby="signup-button-description"
                         >

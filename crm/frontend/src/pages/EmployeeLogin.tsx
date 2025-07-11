@@ -28,7 +28,7 @@ interface ApiErrorResponse {
 }
 
 // Constants
-const CASA_COMMUNITY_DOMAIN = '@casa-community.com';
+// const CASA_COMMUNITY_DOMAIN = '@casa-community.com';
 const MIN_PASSWORD_LENGTH = 6;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
@@ -59,9 +59,9 @@ const EmployeeLogin: React.FC = () => {
             /\S+@\S+\.\S+/.test(formData.work_email);
     }, [formData.work_email]);
 
-    const isCasaEmail = useMemo(() => {
-        return formData.work_email.toLowerCase().endsWith(CASA_COMMUNITY_DOMAIN);
-    }, [formData.work_email]);
+    // const isCasaEmail = useMemo(() => {
+    //     return formData.work_email.toLowerCase().endsWith(CASA_COMMUNITY_DOMAIN);
+    // }, [formData.work_email]);
 
     // Check for lockout on component mount
     useEffect(() => {
@@ -138,9 +138,9 @@ const EmployeeLogin: React.FC = () => {
             newErrors.work_email = 'Work email is required';
         } else if (!isEmailValid) {
             newErrors.work_email = 'Please enter a valid email address';
-        } else if (!isCasaEmail) {
-            newErrors.work_email = 'Please use your Casa Community email address';
-        }
+        } //else if (!isCasaEmail) {
+        //     newErrors.work_email = 'Please use your Casa Community email address';
+        // }
 
         // Password validation
         if (!formData.password) {
@@ -151,7 +151,7 @@ const EmployeeLogin: React.FC = () => {
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [formData, isEmailValid, isCasaEmail]);
+    }, [formData, isEmailValid]);
 
     // Handle failed login attempt
     const handleFailedAttempt = useCallback(() => {
@@ -373,11 +373,11 @@ const EmployeeLogin: React.FC = () => {
                             <Mail className="absolute left-3 top-8 w-4 h-4 text-gray-400" aria-hidden="true" />
 
                             {/* Email domain hint */}
-                            {formData.work_email && !isCasaEmail && !errors.work_email && (
+                            {/* {formData.work_email && !errors.work_email && (
                                 <p className="text-xs text-gray-500 mt-1">
                                     Use your @casa-community.com email address
                                 </p>
-                            )}
+                            )} */}
                         </div>
 
                         {/* Password Input */}

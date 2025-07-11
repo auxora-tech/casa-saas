@@ -10,7 +10,7 @@ interface LoginResponse {
   message: string;
   user: {
     id: number;
-    email: string;
+    work_email: string;
     first_name: string;
     last_name: string;
     is_active: boolean;
@@ -35,7 +35,7 @@ interface SignupResponse {
   user_type: string;
   user: {
     id: number;
-    email: string;
+    work_email: string;
     first_name: string;
     last_name: string;
     role: string;
@@ -50,7 +50,7 @@ interface SignupResponse {
 interface CurrentUserResponse {
   user: {
     id: number;
-    email: string;
+    work_email: string;
     first_name: string;
     last_name: string;
     role: string;
@@ -62,6 +62,56 @@ interface CurrentUserResponse {
     is_active: boolean;
   };
 }
+
+interface EmployeeProfileData {
+  // User info (auto-filled from auth context)
+  first_name: string;
+  last_name: string;
+  work_email: string;
+
+  // Basic Info (REQUIRED)
+  date_of_birth: string;
+  address: string;
+  phone: string;
+  tfn: string;
+
+  // Location (OPTIONAL)
+  suburb?: string;
+  state_territory?: string;
+  postcode?: string;
+
+  // Superannuation (OPTIONAL)
+  fund_name?: string;
+  abn?: string;
+  member_number?: number | null;
+
+  // Bank Details (REQUIRED)
+  bank_name: string;
+  account_name: string;
+  bsb: string;
+  account_number: string;
+
+  // Emergency Contact (REQUIRED)
+  emergency_contact_first_name: string;
+  emergency_contact_last_name?: string;
+  emergency_contact_number: string;
+  emergency_contact_home?: string;
+  emergency_contact_relationship: string;
+}
+
+interface EmployeeProfileResponse {
+  success: boolean;
+  message: string;
+  profile: {
+    id: number;
+    uuid: string;
+    tfn: string; // Masked for security
+    bank_account: string; // Masked for security
+  };
+  action: 'created' | 'updated';
+  next_steps: string[];
+}
+
 
 export const authService = {
   // Client login
@@ -127,5 +177,71 @@ export const authService = {
   updateEmployee: async (employeeId: number, updateData: { role?: string; is_active?: boolean }) => {
     const response = await api.patch(`/admin/employees/${employeeId}/`, updateData);
     return response.data;
-  }
+  },
+
+  // Employee Profile Management
+  createOrUpdateEmployeeProfile: async (profileData: EmployeeProfileData): Promise<EmployeeProfileResponse> => {
+    try {
+      const response = await api.post('/employee/profile/create-update/', profileData);
+      return response.data;
+    } catch (error: any) {
+      // Enhanced error handling for employee profile
+      if (error.response?.data) {
+        throw {
+          message: error.response.data.error || 'Failed to save employee profile',
+          missing_fields: error.response.data.missing_fields,
+          details: error.response.data.details,
+          status: error.response.status
+        };
+      }
+      throw error;
+    }
+  },
+
+   // Get employee profile
+   getEmployeeProfile: async (): Promise<EmployeeProfileData> => {
+    try {
+      const response = await api.get('/employee/profile/');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        // Profile doesn't exist yet, return empty profile
+        return {
+          date_of_birth: '',
+          address: '',
+          phone: '',
+          tfn: '',
+          suburb: '',
+          state_territory: '',
+          postcode: '',
+          fund_name: '',
+          abn: '',
+          member_number: null,
+          bank_name: '',
+          account_name: '',
+          bsb: '',
+          account_number: '',
+          emergency_contact_first_name: '',
+          emergency_contact_last_name: '',
+          emergency_contact_number: '',
+          emergency_contact_home: '',
+          emergency_contact_relationship: ''
+        };
+      }
+      throw error;
+    }
+  },
+
+  // Update employee profile picture
+  updateEmployeeProfilePicture: async (file: File): Promise<{ success: boolean; photo_url: string }> => {
+    const formData = new FormData();
+    formData.append('photo', file);
+    
+    const response = await api.post('/employee/profile/picture/', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
 };

@@ -345,6 +345,7 @@ def employee_signin(request):
         "password" : "password123",
     }
     """
+    print('Request data: ',request.data)
     work_email = request.data.get('work_email', '').strip().lower()
     password = request.data.get('password', '')
 
@@ -367,6 +368,8 @@ def employee_signin(request):
     try:
         user = authenticate(request, work_email=work_email, password=password)
 
+        print(user)
+
         if user is not None:
             # check if account is active
             if not user.is_active:
@@ -378,8 +381,8 @@ def employee_signin(request):
                 client_membership = CompanyMembership.objects.filter(
                     user=user,
                     company__title=settings.DEFAULT_COMPANY['title'],
-                    role__in = ['ADMIN', 'SUPPORT_WORKER']
-                )
+                    role__in = ['ADMIN', 'SUPPORT WORKER']
+                ).first()
             except CompanyMembership.DoesNotExist:
                 return Response({
                     'error': 'Access denied. Client account required.'
@@ -480,6 +483,7 @@ def admin_add_employee(request):
     
     # Check if current user is admin
     try:
+
         admin_membership = CompanyMembership.objects.get(
             user=request.user,
             company__title='Casa Community Pty Ltd',
@@ -497,16 +501,25 @@ def admin_add_employee(request):
     first_name = request.data.get('first_name', '').strip()
     last_name = request.data.get('last_name', '').strip()
     employee_role = request.data.get('role', 'EMPLOYEE').upper()
+
+    # Add this right after getting the form data
+    print("DEBUG - Received data:")
+    print(f"admin details: {request.user}")
+    print(f"work_email: {work_email}")
+    print(f"first_name: {first_name}")
+    print(f"last_name: {last_name}")
+    print(f"employee_role: {employee_role}")
+    print(f"Raw request.data: {request.data}")
     
     # Validate required fields
-    if not all([work_email, password, first_name, last_name]):
+    if not all([work_email, password, first_name, last_name, employee_role]):
         return Response({
             'error': 'All fields are required',
             'required_fields': ['work_email', 'password', 'first_name', 'last_name']
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # Validate role
-    valid_employee_roles = ['EMPLOYEE', 'SUPPORT_WORKER', 'MANAGER', 'ADMIN']
+    valid_employee_roles = ['EMPLOYEE', 'SUPPORT WORKER', 'MANAGER', 'ADMIN']
     if employee_role not in valid_employee_roles:
         return Response({
             'error': f'Invalid role. Must be one of: {", ".join(valid_employee_roles)}',
@@ -514,10 +527,10 @@ def admin_add_employee(request):
         }, status=status.HTTP_400_BAD_REQUEST)
     
     # Validate email domain (optional)
-    if not work_email.endswith('@casa-community.com'):
-        return Response({
-            'error': 'Employee email must use @casa-community.com domain'
-        }, status=status.HTTP_400_BAD_REQUEST)
+    # if not work_email.endswith('@casa-community.com'):
+    #     return Response({
+    #         'error': 'Employee email must use @casa-community.com domain'
+    #     }, status=status.HTTP_400_BAD_REQUEST)
     
     # Check if user already exists
     if User_Model.objects.filter(work_email=work_email).exists():

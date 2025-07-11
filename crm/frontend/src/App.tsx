@@ -9,6 +9,7 @@ import ClientSignup from './pages/ClientSignup';
 import EmployeeLogin from './pages/EmployeeLogin';
 import EmployeeSignup from './pages/EmployeeSignup';
 import ClientDashboard from './pages/ClientDashboard';
+import EmployeeDashboard from './pages/EmployeeDashboard';
 
 // Import CSS
 import './index.css';
@@ -26,14 +27,15 @@ function App() {
             <Route path="/client/login" element={<ClientLogin />} />
             <Route path="/client/signup" element={<ClientSignup />} />
             <Route path="/client/dashboard" element={<ClientDashboard />} />
+            <Route path="/employee/dashboard" element={<EmployeeDashboard/>}/>
 
             {/* Employee Routes */}
             <Route path="/employee/login" element={<EmployeeLogin />} />
             <Route path="/employee/signup" element={<EmployeeSignup />} />
 
             {/* Protected Dashboard Routes - Placeholder for future */}
-            <Route path="/client/dashboard" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Client Dashboard</h2><p className="text-gray-600">Coming Soon...</p></div></div>} />
-            <Route path="/employee/dashboard" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Employee Dashboard</h2><p className="text-gray-600">Coming Soon...</p></div></div>} />
+            {/* <Route path="/client/dashboard" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Client Dashboard</h2><p className="text-gray-600">Coming Soon...</p></div></div>} /> */}
+            {/* <Route path="/employee/dashboard" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Employee Dashboard</h2><p className="text-gray-600">Coming Soon...</p></div></div>} /> */}
 
             {/* Legal Pages - Placeholder for future */}
             <Route path="/terms" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Terms and Conditions</h2><p className="text-gray-600">Coming Soon...</p></div></div>} />

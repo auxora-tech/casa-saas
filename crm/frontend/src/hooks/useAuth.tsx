@@ -13,7 +13,7 @@ import { authService } from "../services/authService";
 
 interface User {
     id: number;
-    email: string;
+    work_email: string;
     first_name: string;
     last_name: string;
     role: string;

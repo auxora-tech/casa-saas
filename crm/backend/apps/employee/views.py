@@ -148,7 +148,7 @@ def create_update_employee_profile(request):
         membership = CompanyMembership.objects.get(
             user=request.user,
             company__title='Casa Community Pty Ltd',
-            role__in=['EMPLOYEE', 'ADMIN', 'SUPPORT_WORKER']
+            role__in=['EMPLOYEE', 'ADMIN', 'SUPPORT WORKER']
         )
     except CompanyMembership.DoesNotExist:
         return Response({
