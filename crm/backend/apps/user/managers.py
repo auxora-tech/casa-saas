@@ -107,6 +107,7 @@ class ClientManager(BaseUserManager):
     def create_superuser(self, work_email, first_name, last_name, password = None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
 
         if not password:
             raise ValueError('Superuser must have a password')

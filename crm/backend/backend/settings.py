@@ -1,5 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
+from decouple import config  # type:ignore
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -15,7 +16,8 @@ SECRET_KEY = 'django-insecure-@9jg_+k3rscm=a@pi#=_ukobwc2_p0@c%^_!homx17fwk@45qr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost','9cb1a0906215.ngrok-free.app', '733f2e6e2412.ngrok-free.app',
+                 'http://localhost:5173/', '127.0.0.1']
 
 
 # Application definition
@@ -213,26 +215,53 @@ DEFAULT_COMPANY = {
     'is_active': True
 }
 
-# In your settings.py
-PANDADOC_TEMPLATES = {
-    'NDIS_SERVICE_AGREEMENT': 'i6Tu7e78xvPdshQgTwbyoV' 
-}
-
 # Gmail SMTP (Simplest for testing)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'your-email@gmail.com')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'your-app-password')
-DEFAULT_FROM_EMAIL = 'Casa Community <noreply@casa-community.com>'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = 'taufeeqyouth@gmail.com'
 
 # Admin notification settings
-ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'casacommunityau@gmail.com')
-NOTIFICATIOIN_EMAILS = [
+ADMIN_EMAIL = config('ADMIN_EMAIL')
+NOTIFICATION_EMAILS = [
     'casacommunityau@gmail.com',
-    'taufeeq@auxoratech.com'
 ]
+
+# Zoho setting
+ZOHO_CLIENT_ID = config('ZOHO_CLIENT_ID')
+ZOHO_CLIENT_SECRET = config('ZOHO_CLIENT_SECRET')
+ZOHO_REDIRECT_URI = config('ZOHO_REDIRECT_URI')
+ZOHO_ENVIRONMENT = config('ZOHO_ENVIRONMENT', default='production')
+ZOHO_SCOPE = config('ZOHO_SCOPE')
+
+# Zoho API URLs
+ZOHO_ACCOUNTS_URL = config('ZOHO_ACCOUNTS_URL')
+ZOHO_SIGN_API_URL = config('ZOHO_SIGN_API_URL')
+ZOHO_WEBHOOK_SECRET = config('ZOHO_WEBHOOK_SECRET')
+ZOHO_SERVICE_AGREEMENT_TEMPLATE_ID = config('ZOHO_SERVICE_AGREEMENT_TEMPLATE_ID')
+
+# Cache settings for tokens (if not already configured)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 3600,  # 1 hour
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    }
+}
+
+# Template Action IDs from your Zoho template
+ZOHO_TEMPLATE_ACTION_IDS = {
+    'CASA_REP': '102698000000040534',  # Casa Community Representative
+    'CLIENT': '102698000000040536',    # Client
+    'GUARDIAN': '102698000000040538'   # Client Guardian/Representative
+}
 
 # Browsers have a security rule: "A website can only talk to servers on the same domain/port by default."
 # Since your React app(port 3000) and Django API(port 8000) are on different ports, the browser says "NOPE! This looks suspicious, I won't allow it!"

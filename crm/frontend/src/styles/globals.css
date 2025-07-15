@@ -1,0 +1,160 @@
+/* styles/globals.css */
+/* @import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities'; */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables for Casa Community Branding */
+:root {
+    --casa-blue: #2563eb;
+    --casa-blue-dark: #1d4ed8;
+    --casa-green: #059669;
+    --casa-green-dark: #047857;
+    --casa-purple: #7c3aed;
+    --casa-purple-dark: #6d28d9;
+}
+
+/* Base Layer - Only essential overrides */
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* Components Layer - Custom Tailwind component classes */
+@layer components {
+
+    /* Button Variants */
+    @reference "tailwindcss"
+    .btn-primary {
+        @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md;
+    }
+
+        @reference "tailwindcss"
+    .btn-secondary {
+        @apply bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-3 px-6 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+    }
+
+    /* Card Components */
+        @reference "tailwindcss"
+    .card {
+        @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
+    }
+    
+        @reference "tailwindcss"
+    .card-hover {
+        @apply transition-all duration-200 hover:shadow-md hover:border-gray-200 hover:-translate-y-0.5;
+    }
+
+    /* Custom Badge Styles */
+        @reference "tailwindcss"
+    .badge {
+        @apply inline-flex items-center px-3 py-1 rounded-full text-sm font-medium;
+    }
+
+        @reference "tailwindcss"
+    .badge-primary {
+        @apply bg-blue-100 text-blue-800;
+    }
+
+    @reference "tailwindcss"
+    .badge-success {
+        @apply bg-green-100 text-green-800;
+    }
+
+        @reference "tailwindcss"
+    .badge-warning {
+        @apply bg-yellow-100 text-yellow-800;
+    }
+
+        @reference "tailwindcss"
+    .badge-danger {
+        @apply bg-red-100 text-red-800;
+    }
+}
+
+/* Utilities Layer - Custom utility classes */
+@layer utilities {
+
+    /* Custom Animations */
+    @reference "tailwindcss"
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .animate-slideIn {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    /* Casa Community Gradients */
+    .casa-gradient {
+        background: linear-gradient(135deg, var(--casa-blue) 0%, var(--casa-purple) 100%);
+    }
+
+    .casa-text-gradient {
+        background: linear-gradient(135deg, var(--casa-blue) 0%, var(--casa-purple) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Glass Morphism Effect */
+        @reference "tailwindcss"
+    .glass-morphism {
+        @apply bg-white bg-opacity-25 backdrop-blur-lg border border-white border-opacity-20;
+    }
+}
+
+/* Custom Keyframes */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Custom Scrollbar (Webkit) */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+@reference "tailwindcss"
+::-webkit-scrollbar-track {
+    @apply bg-gray-100;
+}
+
+@reference "tailwindcss"
+::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 rounded-full;
+}
+
+@reference "tailwindcss"
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400;
+}

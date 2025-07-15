@@ -1,24 +1,27 @@
-// import React from 'react';
+// App.tsx
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 
-// Import components
-import PortalSelection from './components/PortalSelection';
-import ClientLogin from './pages/ClientLogin';
-import ClientSignup from './pages/ClientSignup';
-import EmployeeLogin from './pages/EmployeeLogin';
-import EmployeeSignup from './pages/EmployeeSignup';
+// Auth Components
+import PortalSelection from './components/auth/PortalSelection';
+import ClientLogin from './components/auth/ClientLogin';
+import ClientSignup from './components/auth/ClientSignup';
+
+// Dashboard Components
 import ClientDashboard from './pages/ClientDashboard';
-import EmployeeDashboard from './pages/EmployeeDashboard';
 
-// Import CSS
-import './index.css';
+// Protected Route Component
+import ProtectedRoute from './components/common/ProtectedRoute';
 
-function App() {
+// Global Styles
+import './styles/globals.css';
+
+const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="App">
+        <div className="min-h-screen bg-gray-50">
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<PortalSelection />} />
@@ -26,28 +29,28 @@ function App() {
             {/* Client Routes */}
             <Route path="/client/login" element={<ClientLogin />} />
             <Route path="/client/signup" element={<ClientSignup />} />
-            <Route path="/client/dashboard" element={<ClientDashboard />} />
-            <Route path="/employee/dashboard" element={<EmployeeDashboard/>}/>
 
-            {/* Employee Routes */}
-            <Route path="/employee/login" element={<EmployeeLogin />} />
-            <Route path="/employee/signup" element={<EmployeeSignup />} />
+            {/* Protected Client Dashboard */}
+            <Route
+              path="/client/dashboard/*"
+              element={
+                <ProtectedRoute requiredUserType="client">
+                  <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
 
-            {/* Protected Dashboard Routes - Placeholder for future */}
-            {/* <Route path="/client/dashboard" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Client Dashboard</h2><p className="text-gray-600">Coming Soon...</p></div></div>} /> */}
-            {/* <Route path="/employee/dashboard" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Employee Dashboard</h2><p className="text-gray-600">Coming Soon...</p></div></div>} /> */}
+            {/* Employee Routes (for future implementation) */}
+            <Route path="/employee/login" element={<Navigate to="/employee/signin" replace />} />
+            <Route path="/employee/signin" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 mb-4">Employee Portal</h1><p className="text-gray-600">Coming Soon...</p></div></div>} />
 
-            {/* Legal Pages - Placeholder for future */}
-            <Route path="/terms" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Terms and Conditions</h2><p className="text-gray-600">Coming Soon...</p></div></div>} />
-            <Route path="/privacy" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h2 className="text-2xl font-bold text-gray-900 mb-4">Privacy Policy</h2><p className="text-gray-600">Coming Soon...</p></div></div>} />
-
-            {/* Catch all route - redirect to home */}
+            {/* Catch-all redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </Router>
     </AuthProvider>
   );
-}
+};
 
 export default App;

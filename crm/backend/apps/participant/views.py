@@ -13,11 +13,13 @@ from apps.membership.models import CompanyMembership
 from apps.document.email_services import EmailService
 from decimal import Decimal
 from datetime import datetime
+from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 # ==========================================
 # GET CLIENT PROFILE
 # ==========================================
-
+user_model = get_user_model()
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -262,12 +264,15 @@ def create_update_client_profile_with_notification(request):
             'error': 'Access denied. Client account required.'
         }, status=status.HTTP_403_FORBIDDEN)
 
+    MyUser = request.user
+        
+
     # Get data from request
     data = request.data
 
     # Updated required fields (based on new model structure)
     required_fields = [
-        'first_name', 'last_name', 'email', 'date_of_birth', 'address', 'phone',  # NEW required fields
+        'date_of_birth', 'address', 'phone',  # NEW required fields
         'ndis_number', 'ndis_plan_start', 'ndis_plan_end',
         'ndis_plan_managed_details', 'emergency_contact_1', 'emergency_contact_2'
     ]
@@ -286,14 +291,23 @@ def create_update_client_profile_with_notification(request):
 
     try:
         with transaction.atomic():
+            # UPDATE USER MODEL FIRST (for work_email, first_name, last_name)
+            if data.get('work_email'):
+                participant.user.work_email = data.get('work_email')
+            if data.get('first_name'):
+                MyUser.first_name = data.get('first_name')
+            if data.get('last_name'):
+                MyUser.last_name = data.get('last_name')
+            MyUser.save()
             # Get or create participant profile
             participant, created = Participant.objects.get_or_create(
-                user=request.user,
+                user=MyUser,
                 defaults={
                     # NEW required fields
-                    'first_name': request.user.first_name,
-                    'last_name': request.user.last_name,
-                    'email': request.user.work_email,
+                    # 'first_name': MyUser.first_name,
+                    # 'last_name': MyUser.last_name,
+                    # 'work_email': MyUser.work_email,
+                    'preferred_name': data.get('preferred_name'),
                     'date_of_birth': datetime.strptime(data['date_of_birth'], '%Y-%m-%d').date(),
                     'address': data['address'],
                     'phone': data['phone'],
@@ -303,8 +317,11 @@ def create_update_client_profile_with_notification(request):
                     'ndis_plan_end': datetime.strptime(data['ndis_plan_end'], '%Y-%m-%d').date(),
                     'ndis_plan_managed_details': data['ndis_plan_managed_details'],
                     # Emergency contacts
-                    'emergency_contact_1': data['emergency_contact_1'],
-                    'emergency_contact_2': data['emergency_contact_2'],
+                    'emergency_contact_1': data.get('emergency_contact_1'),
+                    'emergency_contact_2': data.get('emergency_contact_2'),
+                    'guardian_name': data.get('guardian_name'),
+                    'guardian_address': data.get('guardian_address'),
+                    'guardian_contact': data.get('guardian_contact'),
                 }
             )
 
@@ -326,6 +343,10 @@ def create_update_client_profile_with_notification(request):
                     'emergency_contact_1', participant.emergency_contact_1)
                 participant.emergency_contact_2 = data.get(
                     'emergency_contact_2', participant.emergency_contact_2)
+                
+                # Handle photo upload
+                if request.FILES.get('photo'):
+                    participant.photo = request.FILES.get('photo')
 
             # Update optional basic fields
             optional_basic_fields = {
@@ -449,10 +470,9 @@ def create_update_client_profile_with_notification(request):
                 
                 # Also create service agreement record for tracking
                 ServiceAgreement.objects.get_or_create(
-                    participant = request.user,
+                    participant = participant,
                     defaults = {
-                        'client_name': f'{request.user.first_name} {request.user.last_name}',
-                        'ndis_number': participant.ndis_number,
+                        'casa_rep_name': 'Anju Isenth',
                         'status': 'NOT_STARTED'
                     }
                 )

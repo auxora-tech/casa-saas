@@ -46,10 +46,9 @@ class EmailService:
             • Profile Completed: {participant.updated_at.strftime('%d/%m/%Y at %I:%M %p')}
 
             NEXT STEPS:
-            1. Create service agreement in PandaDoc using your template
-            2. Fill in client details from above
-            3. Send agreement to: {participant.user.work_email}
-            4. Client will sign and system will auto-update
+            1. Fill in client details from above
+            2. Send agreement to: {participant.user.work_email}
+            3. Client will sign and system will auto-update
 
             CLIENT DASHBOARD: 
             Your client can track progress at: https://your-domain.com/client/dashboard/

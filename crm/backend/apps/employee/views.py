@@ -10,6 +10,8 @@ from django.db import transaction
 from . models import Employee  # Adjust import path as needed
 from apps.membership.models import CompanyMembership
 from datetime import datetime
+from django.conf import settings
+from django.utils import timezone
 
 # ==========================================
 # GET EMPLOYEE PROFILE
@@ -462,3 +464,134 @@ def admin_get_employees_with_profiles(request):
         }
     })
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_note(request):
+    """
+    Add a note provided by employee regarding their everyday tasks
+    URL: /api/employee/note/add/
+    
+    Expected payload:
+    {
+        "notes": "Today I completed client visits and updated care plans..."
+    }
+    """
+
+    # Verify user is an employee/admin
+    try:
+        membership = CompanyMembership.objects.get(
+            user=request.user,
+            company__title=settings.DEFAULT_COMPANY['title'],
+            role__in=['ADMIN', 'EMPLOYEE', 'SUPPORT_WORKER', 'MANAGER']
+        )
+    except CompanyMembership.DoesNotExist:
+        return Response({
+            'error': 'Access denied. Employee account required.'
+        }, status=status.HTTP_403_FORBIDDEN)
+
+    # Get and validate request data
+    data = request.data
+    notes = data.get('notes')
+
+    # Validate notes field
+    if not notes:
+        return Response({
+            'error': 'Notes field is required',
+            'required_fields': ['notes']
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    if len(notes.strip()) == 0:
+        return Response({
+            'error': 'Notes cannot be empty'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Get employee profile
+    try:
+        employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        return Response({
+            'error': 'Employee profile not found',
+            'message': 'Please complete your employee profile first',
+            'action_required': 'Complete profile to add notes'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    # Save notes
+    try:
+        # If you want to append to existing notes instead of replacing:
+        if employee.notes:
+            employee.notes += f"\n\n[{timezone.now().strftime('%Y-%m-%d %H:%M')}]\n{notes}"
+        else:
+            employee.notes = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')}]\n{notes}"
+
+        # Or simply replace existing notes:
+        # employee.notes = notes.strip()
+        # employee.save()
+
+        return Response({
+            'success': True,
+            'message': f"Notes by {employee.user.first_name} {employee.user.last_name} saved successfully",
+            'note_length': len(notes),
+            'timestamp': timezone.now().isoformat()
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response({
+            'error': 'Failed to save employee notes',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_employee_notes(request):
+    """
+    Get employee's notes from their profile
+    URL: /api/employee/notes/
+    """
+
+    # Verify user is an employee/admin
+    try:
+        membership = CompanyMembership.objects.get(
+            user=request.user,
+            company__title=settings.DEFAULT_COMPANY['title'],
+            role__in=['ADMIN', 'EMPLOYEE', 'SUPPORT_WORKER', 'MANAGER']
+        )
+    except CompanyMembership.DoesNotExist:
+        return Response({
+            'error': 'Access denied. Employee account required.'
+        }, status=status.HTTP_403_FORBIDDEN)
+
+    # Get employee profile
+    try:
+        employee = Employee.objects.get(user=request.user)
+    except Employee.DoesNotExist:
+        return Response({
+            'error': 'Employee profile not found',
+            'message': 'Please complete your employee profile first',
+            'action_required': 'Complete profile to view notes'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    # Return notes data
+    try:
+        return Response({
+            'success': True,
+            'employee': {
+                'id': employee.id,
+                'name': f"{employee.user.first_name} {employee.user.last_name}",
+                'email': employee.user.work_email
+            },
+            'notes': {
+                'content': employee.notes or '',
+                'has_notes': bool(employee.notes and employee.notes.strip()),
+                'character_count': len(employee.notes) if employee.notes else 0,
+                'last_updated': employee.updated_at.isoformat() if hasattr(employee, 'updated_at') else None
+            },
+            'message': 'Notes retrieved successfully' if employee.notes else 'No notes found'
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            'error': 'Failed to retrieve notes',
+            'details': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -14,6 +14,7 @@ class Employee(models.Model):
     id = models.AutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     user = models.OneToOneField(User, related_name='Employee_Profile', on_delete=models.CASCADE)
+    notes = models.TextField('Notes', null=False, blank=True, max_length=1000)
     date_of_birth = models.DateField('Date of Birth', blank=False, null=True)
     address = models.TextField('Address', max_length=500, blank=False, null=False)
     phone = PhoneNumberField(null=False, blank=False, unique=True)
