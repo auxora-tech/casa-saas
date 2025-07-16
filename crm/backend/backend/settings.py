@@ -19,7 +19,7 @@ DJANGO_SECRET_KEY_PRODUCTION = '3q8j8&b_%04dih^%_o00dylg+ii_b&vhpk(c1dx@9o2(y@0k
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost','9cb1a0906215.ngrok-free.app', '733f2e6e2412.ngrok-free.app',
-                 'http://localhost:5173/', '127.0.0.1', 'gododo-backend.onrender.com', 'localhost', 'gododo.com.au']
+                 'http://localhost:5173/', '127.0.0.1', 'gododo-backend.onrender.com', 'localhost', 'gododo.com.au', 'api.gododo.com.au',]
 
 
 # Application definition
@@ -62,14 +62,13 @@ MIDDLEWARE = [
 
 # CORS os.environ.geturation
 # For development only - allows all origins
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
 
 # For PRODUCTION - specify exact origins
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-#     "https://your-production-domain.com",
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "https://gododo.com.au",
+    "https://api.gododo.com.au",
+]
 
 # Optional: Allow specific subdomains
 # CORS_ALLOWED_ORIGIN_REGEXES = [
