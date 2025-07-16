@@ -21,3 +21,13 @@ services:
         value: False
       - key: ZOHO_ENABLED
         value: false
+      - key: EMAIL_HOST_USER
+        value: "taufeeqyouth@gmail.com"                           
+      - key: EMAIL_HOST_PASSWORD
+        value: "yvzp cxor yyff hsij"                           
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
