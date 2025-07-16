@@ -1,0 +1,23 @@
+# render.yaml
+databases:
+  - name: gododo-db
+    databaseName: gododo_crm
+    user: gododo_user
+
+services:
+  - type: web
+    name: gododo-backend
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn backend.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gododo-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ZOHO_ENABLED
+        value: false
