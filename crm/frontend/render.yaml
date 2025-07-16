@@ -1,0 +1,11 @@
+  - type: static
+    name: casa-saas-frontend
+    buildCommand: "cd crm/frontend && npm install && npm run build"
+    staticPublishPath: dist                    # Vite output folder
+    envVars:
+      - key: REACT_APP_API_URL
+        value: "https://api.gododo.com.au"
+      - key: REACT_APP_ENVIRONMENT
+        value: "production"
+      - key: REACT_APP_ZOHO_ENABLED
+        value: "false"

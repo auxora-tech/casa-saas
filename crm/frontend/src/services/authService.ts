@@ -210,6 +210,9 @@ export const authService = {
       if (error.response?.status === 404) {
         // Profile doesn't exist yet, return empty profile
         return {
+          first_name: '',
+          last_name: '',
+          work_email: '',
           date_of_birth: '',
           address: '',
           phone: '',

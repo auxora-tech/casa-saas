@@ -1,6 +1,6 @@
 // components/dashboard/sections/ChatSection.tsx
 import React, { useState } from 'react';
-import { MessageCircle, Send, Paperclip, Phone, Video, MoreVertical, Search } from 'lucide-react';
+import { Send, Paperclip, Phone, Video, MoreVertical, Search } from 'lucide-react';
 
 const ChatSection: React.FC = () => {
     const [message, setMessage] = useState('');

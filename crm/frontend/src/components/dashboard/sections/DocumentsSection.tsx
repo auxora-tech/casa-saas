@@ -11,7 +11,7 @@ import {
     Users,
     Calendar
 } from 'lucide-react';
-import { useAuth } from '../../../hooks/useAuth';
+// import { useAuth } from '../../../hooks/useAuth';
 import { zohoService } from '../../../services/ZohoServices';
 import type{ ServiceAgreement } from '../../../types/zoho.types';
 import ServiceAgreementSigning from '../../documents/ServiceAgreementSigning';
@@ -27,7 +27,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
     participantProfile,
     onNavigate
 }) => {
-    const { user } = useAuth();
+    // const { user } = useAuth();
     const [serviceAgreements, setServiceAgreements] = useState<ServiceAgreement[]>([]);
     const [loading, setLoading] = useState(true);
     const [showSigning, setShowSigning] = useState(false);
@@ -58,7 +58,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
         setShowSigning(true);
     };
 
-    const handleAgreementComplete = (requestId: string) => {
+    const handleAgreementComplete = () => {
         setShowSigning(false);
         loadServiceAgreements(); // Refresh the list
     };

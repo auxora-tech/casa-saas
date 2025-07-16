@@ -8,7 +8,7 @@ import {
     CreditCard,
     Activity,
     Save,
-    Camera,
+    // Camera,
     Check,
     AlertCircle
 } from 'lucide-react';

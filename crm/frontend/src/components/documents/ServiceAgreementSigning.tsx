@@ -137,6 +137,7 @@ const ServiceAgreementSigning: React.FC<ServiceAgreementSigningProps> = ({
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                             <button
+                                title="arrow-left"
                                 onClick={onCancel}
                                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                             >
@@ -255,7 +256,8 @@ const ServiceAgreementSigning: React.FC<ServiceAgreementSigningProps> = ({
             {/* Header */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-center space-x-4">
-                    <button
+                    <button 
+                        title='cancel-arrow-left'
                         onClick={onCancel}
                         className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                     >
@@ -279,6 +281,7 @@ const ServiceAgreementSigning: React.FC<ServiceAgreementSigningProps> = ({
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                             <input
+                                title='full-name'
                                 type="text"
                                 value={`${user?.first_name} ${user?.last_name}`}
                                 disabled
@@ -289,7 +292,8 @@ const ServiceAgreementSigning: React.FC<ServiceAgreementSigningProps> = ({
                             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                             <input
                                 type="email"
-                                value={user?.email || ''}
+                                title='email'
+                                value={user?.work_email || ''}
                                 disabled
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
                             />
@@ -297,6 +301,7 @@ const ServiceAgreementSigning: React.FC<ServiceAgreementSigningProps> = ({
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">NDIS Number</label>
                             <input
+                                title="ndis_number"
                                 type="text"
                                 value={participantProfile.ndis_number || ''}
                                 disabled
@@ -306,6 +311,7 @@ const ServiceAgreementSigning: React.FC<ServiceAgreementSigningProps> = ({
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                             <input
+                                title='address'
                                 type="text"
                                 value={participantProfile.address || ''}
                                 disabled
