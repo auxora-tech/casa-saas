@@ -1,7 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
 import dj_database_url
-from decouple import config  # type:ignore
+#from decouple import os.environ.get  # type:ignore
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -60,7 +60,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS Configuration
+# CORS os.environ.geturation
 # For development only - allows all origins
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -139,13 +139,13 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Database configuration for Render
+# Database os.environ.geturation for Render
 if 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
 else:
-    # Your existing SQLite config for local development
+    # Your existing SQLite os.environ.get for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -239,30 +239,30 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default = '')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', default = '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'taufeeqyouth@gmail.com'
 
 # Admin notification settings
-ADMIN_EMAIL = config('ADMIN_EMAIL')
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
 NOTIFICATION_EMAILS = [
     'casacommunityau@gmail.com',
 ]
 
 # Zoho setting
-ZOHO_CLIENT_ID = config('ZOHO_CLIENT_ID')
-ZOHO_CLIENT_SECRET = config('ZOHO_CLIENT_SECRET')
-ZOHO_REDIRECT_URI = config('ZOHO_REDIRECT_URI')
-ZOHO_ENVIRONMENT = config('ZOHO_ENVIRONMENT', default='production')
-ZOHO_SCOPE = config('ZOHO_SCOPE')
+ZOHO_CLIENT_ID = os.environ.get('ZOHO_CLIENT_ID')
+ZOHO_CLIENT_SECRET = os.environ.get('ZOHO_CLIENT_SECRET')
+ZOHO_REDIRECT_URI = os.environ.get('ZOHO_REDIRECT_URI')
+ZOHO_ENVIRONMENT = os.environ.get('ZOHO_ENVIRONMENT', default='production')
+ZOHO_SCOPE = os.environ.get('ZOHO_SCOPE')
 
 # Zoho API URLs
-ZOHO_ACCOUNTS_URL = config('ZOHO_ACCOUNTS_URL')
-ZOHO_SIGN_API_URL = config('ZOHO_SIGN_API_URL')
-ZOHO_WEBHOOK_SECRET = config('ZOHO_WEBHOOK_SECRET')
-ZOHO_SERVICE_AGREEMENT_TEMPLATE_ID = config('ZOHO_SERVICE_AGREEMENT_TEMPLATE_ID')
+ZOHO_ACCOUNTS_URL = os.environ.get('ZOHO_ACCOUNTS_URL')
+ZOHO_SIGN_API_URL = os.environ.get('ZOHO_SIGN_API_URL')
+ZOHO_WEBHOOK_SECRET = os.environ.get('ZOHO_WEBHOOK_SECRET')
+ZOHO_SERVICE_AGREEMENT_TEMPLATE_ID = os.environ.get('ZOHO_SERVICE_AGREEMENT_TEMPLATE_ID')
 
-# Cache settings for tokens (if not already configured)
+# Cache settings for tokens (if not already os.environ.getured)
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
