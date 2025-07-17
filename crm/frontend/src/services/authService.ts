@@ -119,31 +119,31 @@ interface EmployeeProfileResponse {
 export const authService = {
   // Client login
   clientLogin: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    const response = await api.post('/auth/client/signin/', credentials);
+    const response = await api.post('api/auth/client/signin/', credentials);
     return response.data;
   },
 
   // Employee login  
   employeeLogin: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    const response = await api.post('/auth/employee/signin/', credentials);
+    const response = await api.post('api/auth/employee/signin/', credentials);
     return response.data;
   },
 
   // Client signup
   clientSignup: async (signupData: SignupData): Promise<SignupResponse> => {
-    const response = await api.post('/auth/client/signup/', signupData);
+    const response = await api.post('api/auth/client/signup/', signupData);
     return response.data;
   },
 
   // Employee signup
   employeeSignup: async (signupData: SignupData): Promise<SignupResponse> => {
-    const response = await api.post('/auth/employee/signup/', signupData);
+    const response = await api.post('api/auth/employee/signup/', signupData);
     return response.data;
   },
 
   // Get current user
   getCurrentUser: async (): Promise<CurrentUserResponse> => {
-    const response = await api.get('/user/profile/');
+    const response = await api.get('api/user/profile/');
     return response.data;
   },
 
@@ -152,7 +152,7 @@ export const authService = {
     try {
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
-        await api.post('/auth/signout/', {
+        await api.post('api/auth/signout/', {
           refresh: refreshToken
         });
       }
@@ -168,24 +168,24 @@ export const authService = {
 
   // Admin functions (for future use)
   addEmployee: async (employeeData: SignupData & { role: string }) => {
-    const response = await api.post('/admin/add-employee/', employeeData);
+    const response = await api.post('api/admin/add-employee/', employeeData);
     return response.data;
   },
 
   getEmployees: async () => {
-    const response = await api.get('/admin/employees/');
+    const response = await api.get('api/admin/employees/');
     return response.data;
   },
 
   updateEmployee: async (employeeId: number, updateData: { role?: string; is_active?: boolean }) => {
-    const response = await api.patch(`/admin/employees/${employeeId}/`, updateData);
+    const response = await api.patch(`api/admin/employees/${employeeId}/`, updateData);
     return response.data;
   },
 
   // Employee Profile Management
   createOrUpdateEmployeeProfile: async (profileData: EmployeeProfileData): Promise<EmployeeProfileResponse> => {
     try {
-      const response = await api.post('/employee/profile/create-update/', profileData);
+      const response = await api.post('api/employee/profile/create-update/', profileData);
       return response.data;
     } catch (error: any) {
       // Enhanced error handling for employee profile
@@ -204,7 +204,7 @@ export const authService = {
    // Get employee profile
    getEmployeeProfile: async (): Promise<EmployeeProfileData> => {
     try {
-      const response = await api.get('/employee/profile/');
+      const response = await api.get('api/employee/profile/');
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -243,7 +243,7 @@ export const authService = {
     const formData = new FormData();
     formData.append('photo', file);
     
-    const response = await api.post('/employee/profile/picture/', formData, {
+    const response = await api.post('api/employee/profile/picture/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
