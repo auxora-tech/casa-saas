@@ -19,7 +19,7 @@ DJANGO_SECRET_KEY_PRODUCTION = '3q8j8&b_%04dih^%_o00dylg+ii_b&vhpk(c1dx@9o2(y@0k
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost','9cb1a0906215.ngrok-free.app', '733f2e6e2412.ngrok-free.app',
-                 'http://localhost:5173/', '127.0.0.1', 'casa-saas.onrender.com', 'localhost', 'gododo.com.au', 'api.gododo.com.au',]
+                 'http://localhost:5173/', '127.0.0.1', 'casa-saas.onrender.com', 'localhost', 'gododo.com.au', 'api.gododo.com.au','gododo.com.au/api']
 
 
 # Application definition
