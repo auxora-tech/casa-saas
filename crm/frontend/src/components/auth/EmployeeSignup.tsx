@@ -167,7 +167,7 @@ const EmployeeSignup: React.FC = () => {
             const response = await authService.employeeSignup(signupData);
 
             // Handle successful signup
-            console.log('Employee signup successful:', response.data);
+            console.log('Employee signup successful:', response);
 
             // Redirect to login page with success message
             navigate('/employee/login', {
