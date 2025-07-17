@@ -67,9 +67,13 @@ MIDDLEWARE = [
 # For PRODUCTION - specify exact origins
 CORS_ALLOWED_ORIGINS = [
     "https://gododo.com.au",
-    "https://api.gododo.com.au",
+    "https://www.gododo.com.au",
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://gododo.com.au",
+    "https://www.gododo.com.au",
+]
 # Optional: Allow specific subdomains
 # CORS_ALLOWED_ORIGIN_REGEXES = [
 #     r"^https://\w+\.your-domain\.com$",
