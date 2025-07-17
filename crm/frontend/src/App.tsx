@@ -7,6 +7,8 @@ import { AuthProvider } from './hooks/useAuth';
 import PortalSelection from './components/auth/PortalSelection';
 import ClientLogin from './components/auth/ClientLogin';
 import ClientSignup from './components/auth/ClientSignup';
+import EmployeeLogin from './components/auth/EmployeeLogin';
+import EmployeeSignup from './components/auth/EmployeeSignup';
 
 // Dashboard Components
 import ClientDashboard from './pages/ClientDashboard';
@@ -41,8 +43,8 @@ const App: React.FC = () => {
             />
 
             {/* Employee Routes (for future implementation) */}
-            <Route path="/employee/login" element={<Navigate to="/employee/signin" replace />} />
-            <Route path="/employee/signin" element={<div className="min-h-screen flex items-center justify-center bg-gray-50"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 mb-4">Employee Portal</h1><p className="text-gray-600">Coming Soon...</p></div></div>} />
+            <Route path="/employee/signin" element={<EmployeeLogin />} />
+            <Route path='/employee/signup' element={<EmployeeSignup/>}/>
 
             {/* Catch-all redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
