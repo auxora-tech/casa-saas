@@ -43,7 +43,7 @@ const App: React.FC = () => {
             />
 
             {/* Employee Routes (for future implementation) */}
-            <Route path="/employee/signin" element={<EmployeeLogin />} />
+            <Route path="/employee/login" element={<EmployeeLogin />} />
             <Route path='/employee/signup' element={<EmployeeSignup/>}/>
 
             {/* Catch-all redirect */}

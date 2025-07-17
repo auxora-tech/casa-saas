@@ -9,7 +9,7 @@ const PortalSelection: React.FC = () => {
         if (portalType === 'client') {
             navigate('/client/login');
         } else {
-            navigate('/employee/signin');
+            navigate('/employee/login');
         }
     };
 
