@@ -5,7 +5,7 @@ let API_BASE_URL;
 if (import.meta.env.VITE_APP_ENVIRONMENT === 'production'){
     API_BASE_URL = import.meta.env.VITE_API_URL
 } else {
-    API_BASE_URL = 'http://localhost:8000/api';
+    API_BASE_URL = 'http://localhost:8000/';
 }
 
 // Create axios instance
