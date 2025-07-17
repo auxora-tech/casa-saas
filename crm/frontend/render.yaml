@@ -4,7 +4,7 @@
     staticPublishPath: dist                    # Vite output folder
     envVars:
       - key: VITE_API_URL
-        value: "https://api.gododo.com.au"
+        value: "https://api.gododo.com.au/api"
       - key: VITE_APP_ENVIRONMENT
         value: "production"
       - key: VITE_APP_ZOHO_ENABLED
