@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     User,
-    Mail,
+    // Mail,
     Phone,
     MapPin,
     Building2,
@@ -21,9 +21,9 @@ import { employeeService } from '../../../services/employeeService';
 
 interface EmployeeProfileData {
     // Basic Info (Required)
-    first_name: string;
-    last_name: string;
-    email: string;
+    // first_name: string;
+    // last_name: string;
+    // email: string;
     date_of_birth: string;
     address: string;
     phone: string;
@@ -69,9 +69,9 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
 }) => {
     const [profileData, setProfileData] = useState<EmployeeProfileData>({
         // Basic Info
-        first_name: '',
-        last_name: '',
-        email: '',
+        // first_name: '',
+        // last_name: '',
+        // email: '',
         date_of_birth: '',
         address: '',
         phone: '',
@@ -113,7 +113,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
     // Calculate profile completion
     const calculateCompletion = useCallback((): ProfileCompletion => {
         const requiredFields = [
-            'first_name', 'last_name', 'email', 'date_of_birth', 'address', 'phone', 'tfn',
+            'date_of_birth', 'address', 'phone', 'tfn',
             'bank_name', 'account_name', 'bsb', 'account_number',
             'emergency_contact_first_name', 'emergency_contact_number', 'emergency_contact_relationship'
         ];
@@ -142,7 +142,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
 
         // Define sections
         const sections = {
-            'Basic Information': ['first_name', 'last_name', 'email', 'date_of_birth', 'address', 'phone', 'tfn'],
+            'Basic Information': ['date_of_birth', 'address', 'phone', 'tfn'],
             'Location Details': ['suburb', 'state_territory', 'postcode'],
             'Superannuation': ['fund_name', 'abn', 'member_number'],
             'Bank Details': ['bank_name', 'account_name', 'bsb', 'account_number'],
@@ -231,9 +231,9 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
 
         // Required field validation
         const requiredFields = {
-            first_name: 'First name is required',
-            last_name: 'Last name is required',
-            email: 'Email is required',
+            // first_name: 'First name is required',
+            // last_name: 'Last name is required',
+            // email: 'Email is required',
             date_of_birth: 'Date of birth is required',
             address: 'Address is required',
             phone: 'Phone number is required',
@@ -255,9 +255,9 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
         });
 
         // Email validation
-        if (profileData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileData.email)) {
-            newErrors.email = 'Please enter a valid email address';
-        }
+        // if (profileData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileData.email)) {
+        //     newErrors.email = 'Please enter a valid email address';
+        // }
 
         // Phone validation
         if (profileData.phone && !/^\+?[\d\s\-\(\)]{10,}$/.test(profileData.phone)) {
@@ -431,7 +431,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 First Name *
                             </label>
@@ -446,9 +446,9 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             {errors.first_name && (
                                 <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>
                             )}
-                        </div>
+                        </div> */}
 
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Last Name *
                             </label>
@@ -463,9 +463,9 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             {errors.last_name && (
                                 <p className="mt-1 text-sm text-red-600">{errors.last_name}</p>
                             )}
-                        </div>
+                        </div> */}
 
-                        <div>
+                        {/* <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Email Address *
                             </label>
@@ -483,7 +483,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             {errors.email && (
                                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
                             )}
-                        </div>
+                        </div> */}
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -557,7 +557,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                                     className={`w-full px-4 py-3 pl-12 pr-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${errors.tfn ? 'border-red-300' : 'border-gray-300'
                                         }`}
                                     placeholder="123 456 789"
-                                    maxLength={11}
+                                    maxLength={9}
                                 />
                                 <Shield className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
                                 <button
@@ -589,13 +589,38 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Suburb
                             </label>
-                            <input
-                                type="text"
-                                value={profileData.suburb}
-                                onChange={(e) => handleInputChange('suburb', e.target.value)}
+                            <select
+                                title='state/territory'
+                                value={profileData.state_territory}
+                                onChange={(e) => handleInputChange('state_territory', e.target.value)}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors"
-                                placeholder="Adelaide"
-                            />
+                            >
+                                <option value="">Select State</option>
+                                <option value="Melbourne">Melbourne</option>
+                                <option value="Sydney">Sydney</option>
+                                <option value="Brisbane">Brisbane</option>
+                                <option value="Perth">Perth</option>
+                                <option value="Adelaide">Adelaide</option>
+                                <option value="Gold Coast">Gold Coast</option>
+                                <option value="New Castle">New Castle</option>
+                                <option value="Canberra">Canberra</option>
+                                <option value="Hobart">Hobart</option>
+                                <option value="Darwin">Darwin</option>
+                                <option value="Townsville">Townsville</option>
+                                <option value="Geelong">Geelong</option>
+                                {/* ('MELBOURNE', 'Melbourne'),
+                                ('SYDNEY', 'Sydney'),
+                                ('BRISBANE', 'Brisbane'),
+                                ('PERTH', 'Perth'),
+                                ('ADELAIDE', 'Adelaide'),
+                                ('GOLD_COAST', 'Gold Coast'),
+                                ('NEWCASTLE', 'Newcastle'),
+                                ('CANBERRA', 'Canberra'),
+                                ('HOBART', 'Hobart'),
+                                ('DARWIN', 'Darwin'),
+                                ('TOWNSVILLE', 'Townsville'),
+                                ('GEELONG', 'Geelong'), */}
+                            </select>
                         </div>
 
                         <div>
