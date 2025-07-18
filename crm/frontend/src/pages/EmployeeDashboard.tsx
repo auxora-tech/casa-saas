@@ -6,14 +6,24 @@ import {
     FileText,
     MessageCircle,
     LogOut,
+    // Settings,
     Users,
     Calendar,
     Clock,
     CheckCircle,
     AlertCircle,
     Home,
+    // Bell,
+    // Search,
+    // ChevronDown,
     Plus
 } from 'lucide-react';
+
+// Import the EmployeeProfile component
+// Note: Adjust the import path based on your file structure
+// If EmployeeProfile is in the same directory: './EmployeeProfile'
+// If it's in components folder: '../components/EmployeeProfile'
+import EmployeeProfile from '../components/dashboard/profile/EmployeeProfile';
 
 interface Employee {
     id: string;
@@ -319,12 +329,23 @@ const EmployeeDashboard: React.FC = () => {
         }
     };
 
+    const handleProfileComplete = () => {
+        setEmployee(prev => prev ? { ...prev, profile_completed: true } : null);
+        // Refresh any other data that depends on profile completion
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case 'dashboard':
                 return renderDashboardContent();
             case 'profile':
-                return <EmployeeProfile employee={employee} />;
+                return (
+                    <EmployeeProfileSection
+                        employee={employee}
+                        onProfileComplete={handleProfileComplete}
+                        onBack={() => setActiveTab('dashboard')}
+                    />
+                );
             case 'support-workers':
                 return employee?.role === 'ADMIN' ? <SupportWorkersManagement workers={supportWorkers} /> : null;
             case 'notes':
@@ -442,30 +463,25 @@ const EmployeeDashboard: React.FC = () => {
 };
 
 // Employee Profile Component
-const EmployeeProfile: React.FC<{ employee: Employee | null }> = () => {
-    return (
-        <div className="space-y-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Employee Profile</h3>
-                <p className="text-gray-600">Complete your employee profile to access all features.</p>
-
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-blue-800 font-medium">Profile completion is required for:</p>
-                    <ul className="mt-2 text-blue-700 text-sm space-y-1">
-                        <li>• Access to documents</li>
-                        <li>• Payroll setup</li>
-                        <li>• Employee benefits</li>
-                        <li>• Emergency contact information</li>
-                    </ul>
-                </div>
-
-                <button className="mt-4 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors">
-                    Complete Profile
-                </button>
-            </div>
-        </div>
-    );
-};
+const EmployeeProfileSection: React.FC<{
+    employee: Employee | null;
+    onProfileComplete: () => void;
+    onBack: () => void;
+}> = ({
+    // employee,
+    onProfileComplete,
+    onBack
+}) => {
+        return (
+            <EmployeeProfile
+                onBack={onBack}
+                onProfileComplete={() => {
+                    onProfileComplete();
+                    onBack();
+                }}
+            />
+        );
+    };
 
 // Support Workers Management Component
 const SupportWorkersManagement: React.FC<{ workers: Employee[] }> = ({ workers }) => {

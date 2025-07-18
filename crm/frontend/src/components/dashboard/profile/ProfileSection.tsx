@@ -83,6 +83,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         Profile Picture
                     </label>
                     <input
+                        title='profile-picture'
                         type="file"
                         accept="image/*"
                         onChange={onProfilePictureChange}
@@ -110,6 +111,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         Date of Birth *
                     </label>
                     <input
+                        title='dob'
                         type="date"
                         value={participantProfile.date_of_birth}
                         onChange={(e) => onProfileChange("date_of_birth", e.target.value)}
@@ -161,6 +163,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         Gender
                     </label>
                     <select
+                        title='gender'
                         value={participantProfile.gender}
                         onChange={(e) => onProfileChange("gender", e.target.value)}
                         className="w-full px-4 py-3 border border-dodo-gray/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-dodo-gray/50 focus:border-dodo-black font-body bg-white"
@@ -239,6 +242,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         Plan Start Date *
                     </label>
                     <input
+                        title='plan-start-date'
                         type="date"
                         value={participantProfile.ndis_plan_start}
                         onChange={(e) => onProfileChange("ndis_plan_start", e.target.value)}
@@ -251,6 +255,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
                         Plan End Date *
                     </label>
                     <input
+                        title='plan-end-date'
                         type="date"
                         value={participantProfile.ndis_plan_end}
                         onChange={(e) => onProfileChange("ndis_plan_end", e.target.value)}
