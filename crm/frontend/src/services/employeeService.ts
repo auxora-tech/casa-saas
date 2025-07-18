@@ -74,7 +74,7 @@ export const employeeService = {
   // Create or update employee profile
   createUpdateProfile: async (profileData: EmployeeProfileData): Promise<EmployeeProfileResponse> => {
     try {
-      const response = await api.post('/api/employee/profile/', profileData);
+      const response = await api.post('/api/employee/profile/create-update/', profileData);
       return response.data;
     } catch (error: any) {
       console.error('Employee profile error:', error);
@@ -112,7 +112,7 @@ export const employeeService = {
     password: string;
   }) => {
     try {
-      const response = await api.post('/api/employee/support-workers/', workerData);
+      const response = await api.post('/api/admin/employee/add/', workerData);
       return response.data;
     } catch (error: any) {
       console.error('Create support worker error:', error);
