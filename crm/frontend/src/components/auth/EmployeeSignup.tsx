@@ -1,6 +1,31 @@
-import React, { useState} from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import {
+    ArrowLeft,
+    Eye,
+    EyeOff,
+    Shield,
+    Lock,
+    Mail,
+    User,
+    CheckCircle,
+    AlertCircle,
+    Check,
+    UserCheck
+} from 'lucide-react';
 import { authService } from '../../services/authService';
+
+// Password validation patterns matching Django backend
+const WEAK_PATTERNS = [
+    /password/i,
+    /12345678/,
+    /qwerty/i,
+    /admin/i,
+    /letmein/i
+];
+
+const SEQUENTIAL_NUMBERS = /0123|1234|2345|3456|4567|5678|6789|7890/;
+const SEQUENTIAL_LETTERS = /abcd|bcde|cdef|defg|efgh|fghi|ghij|hijk|ijkl|jklm|klmn|lmno|mnop|nopq|opqr|pqrs|qrst|rstu|stuv|tuvw|uvwx|vwxy|wxyz/i;
 
 interface FormData {
     work_email: string;
@@ -8,7 +33,6 @@ interface FormData {
     confirmPassword: string;
     first_name: string;
     last_name: string;
-    employee_id: string;
 }
 
 interface FormErrors {
@@ -17,8 +41,12 @@ interface FormErrors {
     confirmPassword?: string;
     first_name?: string;
     last_name?: string;
-    employee_id?: string;
     general?: string;
+}
+
+interface PasswordValidation {
+    isValid: boolean;
+    errors: string[];
 }
 
 const EmployeeSignup: React.FC = () => {
@@ -26,103 +54,77 @@ const EmployeeSignup: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [signupSuccess, setSignupSuccess] = useState(false);
 
     const [formData, setFormData] = useState<FormData>({
         work_email: '',
         password: '',
         confirmPassword: '',
         first_name: '',
-        last_name: '',
-        employee_id: ''
+        last_name: ''
     });
 
     const [errors, setErrors] = useState<FormErrors>({});
-    const [passwordStrength, setPasswordStrength] = useState({
-        score: 0,
-        feedback: ''
-    });
 
-    // Password strength checker
-    const checkPasswordStrength = (password: string) => {
-        let score = 0;
-        let feedback = '';
+    // Comprehensive password validation matching Django backend
+    const validatePassword = useCallback((password: string): PasswordValidation => {
+        const errors: string[] = [];
 
-        if (password.length >= 8) score += 1;
-        if (/[a-z]/.test(password)) score += 1;
-        if (/[A-Z]/.test(password)) score += 1;
-        if (/[0-9]/.test(password)) score += 1;
-        if (/[^A-Za-z0-9]/.test(password)) score += 1;
+        if (password.length === 0) {
+            return { isValid: false, errors: [] };
+        }
 
-        switch (score) {
-            case 0:
-            case 1:
-                feedback = 'Very weak';
+        if (password.length < 8) {
+            errors.push('Password must be 8 characters long');
+        }
+
+        if (!/[a-z]/.test(password)) {
+            errors.push('Password must contain at least one lowercase letter (a-z)');
+        }
+
+        if (!/[A-Z]/.test(password)) {
+            errors.push('Password must contain at least one uppercase letter (A-Z)');
+        }
+
+        if (!/\d/.test(password)) {
+            errors.push('Password must contain at least one digit (0-9)');
+        }
+
+        if (!/[!@#$%^&*()_+=\[\]{};:'",.<>/?\\|-]/.test(password)) {
+            errors.push('Password must contain at least one special character (!@#$%^&*()_+=[]{};:\'",./<>?\\|-)');
+        }
+
+        if (/\s/.test(password)) {
+            errors.push('Password must not contain whitespace');
+        }
+
+        if (SEQUENTIAL_NUMBERS.test(password)) {
+            errors.push('Password must not contain sequential numbers');
+        }
+
+        if (SEQUENTIAL_LETTERS.test(password)) {
+            errors.push('Password must not contain sequential letters');
+        }
+
+        for (const pattern of WEAK_PATTERNS) {
+            if (pattern.test(password)) {
+                errors.push('Password is too easy. Please make a strong password');
                 break;
-            case 2:
-                feedback = 'Weak';
-                break;
-            case 3:
-                feedback = 'Good';
-                break;
-            case 4:
-                feedback = 'Strong';
-                break;
-            case 5:
-                feedback = 'Very strong';
-                break;
+            }
         }
 
-        return { score, feedback };
-    };
+        return {
+            isValid: errors.length === 0,
+            errors
+        };
+    }, []);
 
-    // Form validation
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors = {};
-
-        // First name validation
-        if (!formData.first_name.trim()) {
-            newErrors.first_name = 'First name is required';
-        }
-
-        // Last name validation
-        if (!formData.last_name.trim()) {
-            newErrors.last_name = 'Last name is required';
-        }
-
-        // Email validation
-        if (!formData.work_email.trim()) {
-            newErrors.work_email = 'Work email is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.work_email)) {
-            newErrors.work_email = 'Please enter a valid email address';
-        }
-
-        // Employee ID validation (optional but if provided, should not be empty)
-        if (formData.employee_id.trim() && formData.employee_id.trim().length < 3) {
-            newErrors.employee_id = 'Employee ID must be at least 3 characters';
-        }
-
-        // Password validation
-        if (!formData.password) {
-            newErrors.password = 'Password is required';
-        } else if (formData.password.length < 8) {
-            newErrors.password = 'Password must be at least 8 characters';
-        } else if (passwordStrength.score < 3) {
-            newErrors.password = 'Password is too weak. Please include uppercase, lowercase, numbers, and special characters';
-        }
-
-        // Confirm password validation
-        if (!formData.confirmPassword) {
-            newErrors.confirmPassword = 'Please confirm your password';
-        } else if (formData.password !== formData.confirmPassword) {
-            newErrors.confirmPassword = 'Passwords do not match';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+    const passwordValidation = useMemo(() => {
+        return validatePassword(formData.password);
+    }, [formData.password, validatePassword]);
 
     // Handle input changes
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
         setFormData(prev => ({
@@ -137,11 +139,49 @@ const EmployeeSignup: React.FC = () => {
                 [name]: undefined
             }));
         }
+    };
 
-        // Update password strength when password changes
-        if (name === 'password') {
-            setPasswordStrength(checkPasswordStrength(value));
+    // Form validation
+    const validateForm = (): boolean => {
+        const newErrors: FormErrors = {};
+
+        // First name validation
+        if (!formData.first_name.trim()) {
+            newErrors.first_name = 'First name is required';
+        } else if (formData.first_name.trim().length < 2) {
+            newErrors.first_name = 'First name must be at least 2 characters';
         }
+
+        // Last name validation
+        if (!formData.last_name.trim()) {
+            newErrors.last_name = 'Last name is required';
+        } else if (formData.last_name.trim().length < 2) {
+            newErrors.last_name = 'Last name must be at least 2 characters';
+        }
+
+        // Email validation
+        if (!formData.work_email.trim()) {
+            newErrors.work_email = 'Work email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.work_email)) {
+            newErrors.work_email = 'Please enter a valid email address';
+        }
+
+        // Password validation
+        if (!formData.password) {
+            newErrors.password = 'Password is required';
+        } else if (!passwordValidation.isValid) {
+            newErrors.password = passwordValidation.errors[0] || 'Password does not meet security requirements';
+        }
+
+        // Confirm password validation
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = 'Please confirm your password';
+        } else if (formData.password !== formData.confirmPassword) {
+            newErrors.confirmPassword = 'Passwords do not match';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     // Handle form submission
@@ -160,36 +200,38 @@ const EmployeeSignup: React.FC = () => {
                 work_email: formData.work_email.trim(),
                 password: formData.password,
                 first_name: formData.first_name.trim(),
-                last_name: formData.last_name.trim(),
-                ...(formData.employee_id.trim() && { employee_id: formData.employee_id.trim() })
+                last_name: formData.last_name.trim()
             };
 
             const response = await authService.employeeSignup(signupData);
 
-            // Handle successful signup
             console.log('Employee signup successful:', response);
+            setSignupSuccess(true);
 
-            // Redirect to login page with success message
-            navigate('/employee/login', {
-                state: {
-                    message: 'Account created successfully! Please log in with your credentials.',
-                    email: formData.work_email
-                }
-            });
+            setTimeout(() => {
+                navigate('/employee/login', {
+                    state: {
+                        message: 'Account created successfully! Please log in with your credentials.',
+                        email: formData.work_email
+                    }
+                });
+            }, 1500);
 
         } catch (error: any) {
             console.error('Employee signup error:', error);
 
             if (error.response?.data) {
-                const apiErrors = error.response.data;
-                setErrors({
-                    work_email: apiErrors.work_email?.[0],
-                    password: apiErrors.password?.[0],
-                    first_name: apiErrors.first_name?.[0],
-                    last_name: apiErrors.last_name?.[0],
-                    employee_id: apiErrors.employee_id?.[0],
-                    general: apiErrors.detail || apiErrors.non_field_errors?.[0] || 'Registration failed. Please try again.'
-                });
+                const errorData = error.response.data;
+
+                if (errorData.error) {
+                    setErrors({ general: errorData.error });
+                } else if (errorData.field_errors) {
+                    setErrors(errorData.field_errors);
+                } else if (errorData.work_email) {
+                    setErrors({ work_email: errorData.work_email[0] || 'Email already exists' });
+                } else {
+                    setErrors({ general: 'Registration failed. Please try again.' });
+                }
             } else {
                 setErrors({
                     general: 'Network error. Please check your connection and try again.'
@@ -200,53 +242,79 @@ const EmployeeSignup: React.FC = () => {
         }
     };
 
-    // Password strength color
-    const getPasswordStrengthColor = () => {
-        if (passwordStrength.score <= 1) return 'bg-red-500';
-        if (passwordStrength.score <= 2) return 'bg-orange-500';
-        if (passwordStrength.score <= 3) return 'bg-yellow-500';
-        if (passwordStrength.score <= 4) return 'bg-blue-500';
-        return 'bg-green-500';
-    };
+    // Success screen
+    if (signupSuccess) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
+                <div className="max-w-md w-full text-center">
+                    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 space-y-6">
+                        <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <CheckCircle className="w-10 h-10 text-green-600" />
+                        </div>
+
+                        <h2 className="text-3xl font-bold text-gray-900">Welcome to Casa Community!</h2>
+                        <p className="text-gray-600 leading-relaxed">
+                            Your employee account has been created successfully. You're being redirected to the login page.
+                        </p>
+
+                        <div className="flex justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                        </div>
+                        <p className="text-sm text-gray-500">Redirecting...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-green-50 flex items-center justify-center p-4">
             <div className="max-w-md w-full space-y-8">
-                <div>
-                    <div className="mx-auto h-12 w-12 bg-indigo-600 rounded-full flex items-center justify-center">
-                        <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+                {/* Header */}
+                <div className="text-center">
+                    <Link
+                        to="/"
+                        className="inline-flex items-center text-emerald-600 hover:text-emerald-800 mb-6 transition-colors group"
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        Back to Portal Selection
+                    </Link>
+
+                    <div className="mb-6">
+                        <div className="w-16 h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                            <UserCheck className="w-8 h-8 text-emerald-600" />
+                        </div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Join Our Team</h2>
+                        <p className="text-gray-600">Create your employee account</p>
                     </div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Join as Employee
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Create your employee account to get started
-                    </p>
+
+                    {/* Security Badge */}
+                    <div className="flex items-center justify-center space-x-2 bg-white rounded-full px-4 py-2 shadow-sm border border-gray-100 mb-6">
+                        <Shield className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-gray-700 font-medium">Secure Registration</span>
+                    </div>
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                {/* Signup Form */}
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 space-y-6">
+                    {/* General Error */}
                     {errors.general && (
-                        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                            <div className="flex">
-                                <div className="flex-shrink-0">
-                                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div className="ml-3">
-                                    <p className="text-sm text-red-700">{errors.general}</p>
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                            <div className="flex items-start space-x-3">
+                                <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+                                <div>
+                                    <h4 className="text-red-800 font-medium">Registration Failed</h4>
+                                    <p className="text-red-700 text-sm mt-1">{errors.general}</p>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    <div className="space-y-4">
-                        {/* First Name and Last Name */}
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Name Fields */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="relative">
+                                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-2">
                                     First Name
                                 </label>
                                 <input
@@ -255,18 +323,19 @@ const EmployeeSignup: React.FC = () => {
                                     type="text"
                                     required
                                     value={formData.first_name}
-                                    onChange={handleInputChange}
-                                    className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${errors.first_name ? 'border-red-300' : 'border-gray-300'
-                                        } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                                    onChange={handleChange}
+                                    className={`appearance-none relative block w-full px-4 py-3 pl-12 border ${errors.first_name ? 'border-red-300' : 'border-gray-300'
+                                        } placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm transition-colors`}
                                     placeholder="First name"
                                 />
+                                <User className="absolute left-4 top-11 w-5 h-5 text-gray-400" />
                                 {errors.first_name && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>
+                                    <p className="mt-2 text-sm text-red-600">{errors.first_name}</p>
                                 )}
                             </div>
 
-                            <div>
-                                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">
+                            <div className="relative">
+                                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-2">
                                     Last Name
                                 </label>
                                 <input
@@ -275,20 +344,21 @@ const EmployeeSignup: React.FC = () => {
                                     type="text"
                                     required
                                     value={formData.last_name}
-                                    onChange={handleInputChange}
-                                    className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${errors.last_name ? 'border-red-300' : 'border-gray-300'
-                                        } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                                    onChange={handleChange}
+                                    className={`appearance-none relative block w-full px-4 py-3 pl-12 border ${errors.last_name ? 'border-red-300' : 'border-gray-300'
+                                        } placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm transition-colors`}
                                     placeholder="Last name"
                                 />
+                                <User className="absolute left-4 top-11 w-5 h-5 text-gray-400" />
                                 {errors.last_name && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.last_name}</p>
+                                    <p className="mt-2 text-sm text-red-600">{errors.last_name}</p>
                                 )}
                             </div>
                         </div>
 
-                        {/* Work Email */}
-                        <div>
-                            <label htmlFor="work_email" className="block text-sm font-medium text-gray-700">
+                        {/* Email Input */}
+                        <div className="relative">
+                            <label htmlFor="work_email" className="block text-sm font-medium text-gray-700 mb-2">
                                 Work Email
                             </label>
                             <input
@@ -298,137 +368,172 @@ const EmployeeSignup: React.FC = () => {
                                 autoComplete="email"
                                 required
                                 value={formData.work_email}
-                                onChange={handleInputChange}
-                                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${errors.work_email ? 'border-red-300' : 'border-gray-300'
-                                    } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                                onChange={handleChange}
+                                className={`appearance-none relative block w-full px-4 py-3 pl-12 border ${errors.work_email ? 'border-red-300' : 'border-gray-300'
+                                    } placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm transition-colors`}
                                 placeholder="you@company.com"
                             />
+                            <Mail className="absolute left-4 top-11 w-5 h-5 text-gray-400" />
                             {errors.work_email && (
-                                <p className="mt-1 text-sm text-red-600">{errors.work_email}</p>
+                                <p className="mt-2 text-sm text-red-600">{errors.work_email}</p>
                             )}
                         </div>
 
-                        {/* Employee ID */}
-                        <div>
-                            <label htmlFor="employee_id" className="block text-sm font-medium text-gray-700">
-                                Employee ID <span className="text-gray-400">(Optional)</span>
-                            </label>
-                            <input
-                                id="employee_id"
-                                name="employee_id"
-                                type="text"
-                                value={formData.employee_id}
-                                onChange={handleInputChange}
-                                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${errors.employee_id ? 'border-red-300' : 'border-gray-300'
-                                    } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                                placeholder="EMP001"
-                            />
-                            {errors.employee_id && (
-                                <p className="mt-1 text-sm text-red-600">{errors.employee_id}</p>
-                            )}
-                        </div>
-
-                        {/* Password */}
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                        {/* Password Input */}
+                        <div className="relative">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                                 Password
                             </label>
-                            <div className="mt-1 relative">
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    autoComplete="new-password"
-                                    required
-                                    value={formData.password}
-                                    onChange={handleInputChange}
-                                    className={`appearance-none relative block w-full px-3 py-2 pr-10 border ${errors.password ? 'border-red-300' : 'border-gray-300'
-                                        } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                                    placeholder="Password"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                >
-                                    {showPassword ? (
-                                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.757 6.757M9.878 9.878a3 3 0 00-.007 4.243m4.242-4.242L15.121 9.121M15.121 9.121L18.242 6M15.121 9.121a3 3 0 01-.007 4.243m-4.242-4.242l-4.243-4.243" />
-                                        </svg>
-                                    ) : (
-                                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    )}
-                                </button>
-                            </div>
-                            {formData.password && (
-                                <div className="mt-2">
-                                    <div className="flex items-center">
-                                        <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
-                                            <div
-                                                className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
-                                                style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs text-gray-600">{passwordStrength.feedback}</span>
-                                    </div>
-                                </div>
-                            )}
+                            <input
+                                id="password"
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                autoComplete="new-password"
+                                required
+                                value={formData.password}
+                                onChange={handleChange}
+                                className={`appearance-none relative block w-full px-4 py-3 pl-12 pr-12 border ${errors.password ? 'border-red-300' : 'border-gray-300'
+                                    } placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm transition-colors`}
+                                placeholder="Create a secure password"
+                            />
+                            <Lock className="absolute left-4 top-11 w-5 h-5 text-gray-400" />
+                            <button
+                                type="button"
+                                className="absolute right-4 top-11 text-gray-400 hover:text-gray-600 transition-colors"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? (
+                                    <EyeOff className="w-5 h-5" />
+                                ) : (
+                                    <Eye className="w-5 h-5" />
+                                )}
+                            </button>
                             {errors.password && (
-                                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                                <p className="mt-2 text-sm text-red-600">{errors.password}</p>
                             )}
                         </div>
 
-                        {/* Confirm Password */}
-                        <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+                        {/* Confirm Password Input */}
+                        <div className="relative">
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                                 Confirm Password
                             </label>
-                            <div className="mt-1 relative">
-                                <input
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    type={showConfirmPassword ? 'text' : 'password'}
-                                    autoComplete="new-password"
-                                    required
-                                    value={formData.confirmPassword}
-                                    onChange={handleInputChange}
-                                    className={`appearance-none relative block w-full px-3 py-2 pr-10 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                                        } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                                    placeholder="Confirm password"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                >
-                                    {showConfirmPassword ? (
-                                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.757 6.757M9.878 9.878a3 3 0 00-.007 4.243m4.242-4.242L15.121 9.121M15.121 9.121L18.242 6M15.121 9.121a3 3 0 01-.007 4.243m-4.242-4.242l-4.243-4.243" />
-                                        </svg>
-                                    ) : (
-                                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
-                                    )}
-                                </button>
-                            </div>
+                            <input
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                autoComplete="new-password"
+                                required
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                className={`appearance-none relative block w-full px-4 py-3 pl-12 pr-12 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                                    } placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm transition-colors`}
+                                placeholder="Confirm your password"
+                            />
+                            <Shield className="absolute left-4 top-11 w-5 h-5 text-gray-400" />
+                            <button
+                                type="button"
+                                className="absolute right-4 top-11 text-gray-400 hover:text-gray-600 transition-colors"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                                {showConfirmPassword ? (
+                                    <EyeOff className="w-5 h-5" />
+                                ) : (
+                                    <Eye className="w-5 h-5" />
+                                )}
+                            </button>
                             {errors.confirmPassword && (
-                                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                                <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
                             )}
                         </div>
-                    </div>
 
-                    <div>
+                        {/* Password Requirements */}
+                        <div className="bg-gray-50 rounded-xl p-4 text-sm">
+                            <p className="font-semibold text-gray-900 mb-3">Password Requirements:</p>
+                            <div className="grid grid-cols-1 gap-2">
+                                <div className="flex items-center space-x-2">
+                                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${formData.password.length >= 8 ? 'bg-green-500' : 'bg-gray-300'
+                                        }`}>
+                                        {formData.password.length >= 8 && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <span className={formData.password.length >= 8 ? 'text-green-700' : 'text-gray-600'}>
+                                        At least 8 characters
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${/[a-z]/.test(formData.password) ? 'bg-green-500' : 'bg-gray-300'
+                                        }`}>
+                                        {/[a-z]/.test(formData.password) && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <span className={/[a-z]/.test(formData.password) ? 'text-green-700' : 'text-gray-600'}>
+                                        One lowercase letter
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${/[A-Z]/.test(formData.password) ? 'bg-green-500' : 'bg-gray-300'
+                                        }`}>
+                                        {/[A-Z]/.test(formData.password) && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <span className={/[A-Z]/.test(formData.password) ? 'text-green-700' : 'text-gray-600'}>
+                                        One uppercase letter
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${/\d/.test(formData.password) ? 'bg-green-500' : 'bg-gray-300'
+                                        }`}>
+                                        {/\d/.test(formData.password) && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <span className={/\d/.test(formData.password) ? 'text-green-700' : 'text-gray-600'}>
+                                        One number
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center space-x-2">
+                                    <div className={`w-4 h-4 rounded-full flex items-center justify-center ${/[!@#$%^&*()_+=\[\]{};:'",.<>/?\\|-]/.test(formData.password) ? 'bg-green-500' : 'bg-gray-300'
+                                        }`}>
+                                        {/[!@#$%^&*()_+=\[\]{};:'",.<>/?\\|-]/.test(formData.password) && <Check className="w-3 h-3 text-white" />}
+                                    </div>
+                                    <span className={/[!@#$%^&*()_+=\[\]{};:'",.<>/?\\|-]/.test(formData.password) ? 'text-green-700' : 'text-gray-600'}>
+                                        One special character
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Password validation feedback */}
+                            {formData.password && passwordValidation.errors.length > 0 && (
+                                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                    <p className="text-red-800 font-medium text-xs mb-2">Issues to fix:</p>
+                                    <ul className="space-y-1">
+                                        {passwordValidation.errors.slice(0, 3).map((error, index) => (
+                                            <li key={index} className="text-red-700 text-xs flex items-start">
+                                                <span className="text-red-500 mr-2 mt-0.5">•</span>
+                                                {error}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {formData.password && passwordValidation.isValid && (
+                                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                    <p className="text-green-800 font-medium text-xs flex items-center">
+                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        Password meets all requirements!
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Signup Button */}
                         <button
                             type="submit"
-                            disabled={loading}
-                            className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${loading
-                                    ? 'bg-indigo-400 cursor-not-allowed'
-                                    : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                            disabled={loading || !passwordValidation.isValid}
+                            className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white ${loading || !passwordValidation.isValid
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
                                 } transition duration-150 ease-in-out`}
                         >
                             {loading && (
@@ -439,17 +544,50 @@ const EmployeeSignup: React.FC = () => {
                             )}
                             {loading ? 'Creating Account...' : 'Create Account'}
                         </button>
-                    </div>
+                    </form>
 
-                    <div className="text-center">
-                        <p className="text-sm text-gray-600">
-                            Already have an account?{' '}
-                            <Link to="/employee/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-                                Sign in here
+                    {/* Additional Links */}
+                    <div className="space-y-4">
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200" />
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white text-gray-500">Already have an account?</span>
+                            </div>
+                        </div>
+
+                        <div className="text-center">
+                            <Link
+                                to="/employee/login"
+                                className="inline-flex items-center justify-center w-full px-4 py-3 border border-gray-300 rounded-xl text-gray-700 bg-white hover:bg-gray-50 font-medium transition-colors"
+                            >
+                                Sign In Instead
                             </Link>
-                        </p>
+                        </div>
+
+                        <div className="text-center">
+                            <p className="text-sm text-gray-500">
+                                Are you an NDIS participant?{' '}
+                                <Link to="/client/signup" className="text-emerald-600 hover:text-emerald-800 font-medium">
+                                    Use Client Portal
+                                </Link>
+                            </p>
+                        </div>
                     </div>
-                </form>
+                </div>
+
+                {/* Help Section */}
+                <div className="text-center">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <h4 className="text-sm font-semibold text-gray-900 mb-2">Need Help with Registration?</h4>
+                        <div className="space-y-1 text-sm text-gray-600">
+                            <p>📞 Call: 1800-CASA-HELP</p>
+                            <p>✉️ Email: help@casa-community.com.au</p>
+                            <p className="text-xs text-gray-500 mt-2">Available Mon-Fri, 8AM-6PM AEST</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
