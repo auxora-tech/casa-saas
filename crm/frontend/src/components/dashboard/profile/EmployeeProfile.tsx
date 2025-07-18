@@ -186,6 +186,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
             try {
                 // Get user data from token or storage
                 const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+                console.log(userData);
 
                 setProfileData(prev => ({
                     ...prev,
