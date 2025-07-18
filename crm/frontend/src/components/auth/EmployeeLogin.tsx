@@ -239,8 +239,8 @@ const EmployeeLogin: React.FC = () => {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <h4 className="text-sm font-semibold text-gray-900 mb-2">Need Help?</h4>
                         <div className="space-y-1 text-sm text-gray-600">
-                            <p>📞 Staff Support: 1800-STAFF-HELP</p>
-                            <p>✉️ Email: staff-support@casa-community.com.au</p>
+                            <p>📞 Staff Support: 1800-18-2272</p>
+                            <p>✉️ Email: info@casacommunity.com.au</p>
                             <p className="text-xs text-gray-500 mt-2">Available 24/7 for staff members</p>
                         </div>
                     </div>

@@ -12,6 +12,7 @@ import EmployeeSignup from './components/auth/EmployeeSignup';
 
 // Dashboard Components
 import ClientDashboard from './pages/ClientDashboard';
+import EmployeeDashboard from './pages/EmployeeDashboard';
 
 // Protected Route Component
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -38,6 +39,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute requiredUserType="client">
                   <ClientDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employee/dashboard/*"
+              element={
+                <ProtectedRoute requiredUserType="employee">
+                  <EmployeeDashboard />
                 </ProtectedRoute>
               }
             />
