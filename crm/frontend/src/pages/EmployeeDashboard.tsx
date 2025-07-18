@@ -102,17 +102,17 @@ const EmployeeDashboard: React.FC = () => {
         navigate('/');
     };
 
-    const handleProfileClick = () => {
-        setActiveTab('profile');
-    };
+    // const handleProfileClick = () => {
+    //     setActiveTab('profile');
+    // };
 
-    const handleDocumentsClick = () => {
-        if (!employee?.profile_completed) {
-            alert('Please complete your profile first to access documents.');
-            return;
-        }
-        setActiveTab('documents');
-    };
+    // const handleDocumentsClick = () => {
+    //     if (!employee?.profile_completed) {
+    //         alert('Please complete your profile first to access documents.');
+    //         return;
+    //     }
+    //     setActiveTab('documents');
+    // };
 
     const sidebarItems = [
         { id: 'dashboard', icon: Home, label: 'Dashboard', available: true },
@@ -442,7 +442,7 @@ const EmployeeDashboard: React.FC = () => {
 };
 
 // Employee Profile Component
-const EmployeeProfile: React.FC<{ employee: Employee | null }> = ({ employee }) => {
+const EmployeeProfile: React.FC<{ employee: Employee | null }> = () => {
     return (
         <div className="space-y-6">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
