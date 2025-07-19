@@ -76,7 +76,7 @@ export const employeeService = {
     try {
       // The backend accepts both POST and PUT for create/update
       // Using POST as it handles both create and update scenarios
-      const response = await api.post('/api/employee/profile/', profileData);
+      const response = await api.post('/api/employee/profile/create-update/', profileData);
       return response.data;
     } catch (error: any) {
       console.error('Employee profile error:', error);
