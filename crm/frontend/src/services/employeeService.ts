@@ -5,7 +5,7 @@ export interface EmployeeProfileData {
   // Basic Info (Required)
   first_name: string;
   last_name: string;
-  email: string;
+  work_email: string;
   date_of_birth: string;
   address: string;
   phone: string;

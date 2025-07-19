@@ -18,12 +18,14 @@ import {
     Info
 } from 'lucide-react';
 import { employeeService } from '../../../services/employeeService';
+import { useAuth } from '../../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface EmployeeProfileData {
     // Basic Info (Required)
     first_name: string;
     last_name: string;
-    email: string;
+    work_email: string;
     date_of_birth: string;
     address: string;
     phone: string;
@@ -71,7 +73,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
         // Basic Info
         first_name: '',
         last_name: '',
-        email: '',
+        work_email: '',
         date_of_birth: '',
         address: '',
         phone: '',
@@ -101,6 +103,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
         emergency_contact_relationship: ''
     });
 
+
     const [errors, setErrors] = useState<ProfileErrors>({});
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -109,11 +112,19 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
         bsb: false,
         account_number: false
     });
+    const { user, isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigate('/employee/login/')
+        }
+    },[])
 
     // Calculate profile completion
     const calculateCompletion = useCallback((): ProfileCompletion => {
         const requiredFields = [
-            'first_name', 'last_name', 'email', 'date_of_birth', 'address', 'phone', 'tfn',
+            'first_name', 'last_name', 'work_email', 'date_of_birth', 'address', 'phone', 'tfn',
             'bank_name', 'account_name', 'bsb', 'account_number',
             'emergency_contact_first_name', 'emergency_contact_number', 'emergency_contact_relationship'
         ];
@@ -142,7 +153,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
 
         // Define sections
         const sections = {
-            'Basic Information': ['first_name', 'last_name', 'email', 'date_of_birth', 'address', 'phone', 'tfn'],
+            'Basic Information': ['first_name', 'last_name', 'work_email', 'date_of_birth', 'address', 'phone', 'tfn'],
             'Location Details': ['suburb', 'state_territory', 'postcode'],
             'Superannuation': ['fund_name', 'abn', 'member_number'],
             'Bank Details': ['bank_name', 'account_name', 'bsb', 'account_number'],
@@ -186,13 +197,13 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
             try {
                 // Get user data from JWT token or API call
                 // In a real app, you'd decode the JWT or call an API endpoint
-                const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+                // const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
 
                 // Pre-populate basic info from user account (read-only fields)
                 const userBasicInfo = {
-                    first_name: userData.first_name || '',
-                    last_name: userData.last_name || '',
-                    email: userData.email || userData.work_email || '',
+                    first_name: user?.first_name || '',
+                    last_name: user?.last_name || '',
+                    work_email: user?.work_email || '',
                 };
 
                 // Set initial data with user account info
@@ -212,7 +223,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             // Always use user account data for these fields
                             first_name: userBasicInfo.first_name,
                             last_name: userBasicInfo.last_name,
-                            email: userBasicInfo.email,
+                            email: userBasicInfo.work_email,
                         }));
                     }
                 } catch (profileError) {
@@ -340,9 +351,9 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
             // Format data for API - include all required fields
             const apiData = {
                 // Basic Info (all required by backend)
-                first_name: profileData.first_name.trim(),
-                last_name: profileData.last_name.trim(),
-                email: profileData.email.trim(),
+                first_name: user?.first_name,
+                last_name: user?.last_name,
+                work_email: user?.work_email,
                 date_of_birth: profileData.date_of_birth,
                 address: profileData.address.trim(),
                 phone: profileData.phone.trim(),
@@ -550,7 +561,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             <div className="relative">
                                 <input
                                     type="email"
-                                    value={profileData.email}
+                                    value={profileData.work_email}
                                     readOnly
                                     disabled
                                     className="w-full px-4 py-3 pl-12 border border-gray-200 bg-gray-50 text-gray-700 rounded-xl cursor-not-allowed"
