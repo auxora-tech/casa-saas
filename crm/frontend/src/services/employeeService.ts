@@ -3,9 +3,9 @@ import api from './api';
 
 export interface EmployeeProfileData {
   // Basic Info (Required)
-//   first_name: string;
-//   last_name: string;
-//   email: string;
+  first_name: string;
+  last_name: string;
+  email: string;
   date_of_birth: string;
   address: string;
   phone: string;
@@ -74,10 +74,19 @@ export const employeeService = {
   // Create or update employee profile
   createUpdateProfile: async (profileData: EmployeeProfileData): Promise<EmployeeProfileResponse> => {
     try {
-      const response = await api.post('/api/employee/profile/create-update/', profileData);
+      // The backend accepts both POST and PUT for create/update
+      // Using POST as it handles both create and update scenarios
+      const response = await api.post('/api/employee/profile/', profileData);
       return response.data;
     } catch (error: any) {
       console.error('Employee profile error:', error);
+      
+      // Log the full error for debugging
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
+      
       throw error;
     }
   },
@@ -112,7 +121,7 @@ export const employeeService = {
     password: string;
   }) => {
     try {
-      const response = await api.post('/api/admin/employee/add/', workerData);
+      const response = await api.post('/api/employee/support-workers/', workerData);
       return response.data;
     } catch (error: any) {
       console.error('Create support worker error:', error);
