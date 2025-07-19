@@ -206,6 +206,8 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                     work_email: user?.work_email || '',
                 };
 
+                console.log(userBasicInfo);
+
                 // Set initial data with user account info
                 setProfileData(prev => ({
                     ...prev,
