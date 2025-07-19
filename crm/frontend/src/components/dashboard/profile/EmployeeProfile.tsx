@@ -184,34 +184,40 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
         const loadProfile = async () => {
             setLoading(true);
             try {
-                // Get user data from token or storage first
+                // Get user data from JWT token or API call
+                // In a real app, you'd decode the JWT or call an API endpoint
                 const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
 
-                // Set initial data from user account
-                setProfileData(prev => ({
-                    ...prev,
+                // Pre-populate basic info from user account (read-only fields)
+                const userBasicInfo = {
                     first_name: userData.first_name || '',
                     last_name: userData.last_name || '',
                     email: userData.email || userData.work_email || '',
+                };
+
+                // Set initial data with user account info
+                setProfileData(prev => ({
+                    ...prev,
+                    ...userBasicInfo,
                 }));
 
-                // Try to load existing employee profile
+                // Try to load existing employee profile for additional details
                 try {
                     const profile = await employeeService.getProfile();
                     if (profile) {
-                        // Merge profile data with form data
+                        // Merge profile data but keep user account data for basic fields
                         setProfileData(prevData => ({
                             ...prevData,
                             ...profile,
-                            // Ensure we keep the user data for required fields
-                            first_name: profile.first_name || userData.first_name || '',
-                            last_name: profile.last_name || userData.last_name || '',
-                            email: profile.email || userData.email || userData.work_email || '',
+                            // Always use user account data for these fields
+                            first_name: userBasicInfo.first_name,
+                            last_name: userBasicInfo.last_name,
+                            email: userBasicInfo.email,
                         }));
                     }
                 } catch (profileError) {
                     // Profile doesn't exist yet, just use user data
-                    console.log('No existing profile found, using user data only');
+                    console.log('No existing profile found, using user account data');
                 }
             } catch (error) {
                 console.error('Failed to load profile:', error);
@@ -243,61 +249,13 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
     const validateForm = (): boolean => {
         const newErrors: ProfileErrors = {};
 
-        // Required field validation
-        const requiredFields = {
-            first_name: 'First name is required',
-            last_name: 'Last name is required',
-            email: 'Email is required',
-            date_of_birth: 'Date of birth is required',
-            address: 'Address is required',
-            phone: 'Phone number is required',
-            tfn: 'Tax File Number is required',
-            bank_name: 'Bank name is required',
-            account_name: 'Account name is required',
-            bsb: 'BSB is required',
-            account_number: 'Account number is required',
-            emergency_contact_first_name: 'Emergency contact first name is required',
-            emergency_contact_number: 'Emergency contact number is required',
-            emergency_contact_relationship: 'Emergency contact relationship is required'
-        };
+        // NOTE: first_name, last_name, email are auto-populated from user account
+        // so we don't need to validate them here
 
-        // Check required fields
-        Object.entries(requiredFields).forEach(([field, message]) => {
-            if (!profileData[field as keyof EmployeeProfileData]?.toString().trim()) {
-                newErrors[field] = message;
-            }
-        });
-
-        // Email validation
-        if (profileData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(profileData.email)) {
-            newErrors.email = 'Please enter a valid email address';
-        }
-
-        // Phone validation
-        if (profileData.phone && !/^\+?[\d\s\-\(\)]{10,}$/.test(profileData.phone)) {
-            newErrors.phone = 'Please enter a valid phone number';
-        }
-
-        // TFN validation
-        const tfn = profileData.tfn.replace(/\s/g, '');
-        if (profileData.tfn && (!/^\d{9}$/.test(tfn))) {
-            newErrors.tfn = 'TFN must be exactly 9 digits';
-        }
-
-        // BSB validation
-        const bsb = profileData.bsb.replace(/[\s\-]/g, '');
-        if (profileData.bsb && (!/^\d{6}$/.test(bsb))) {
-            newErrors.bsb = 'BSB must be exactly 6 digits';
-        }
-
-        // Account number validation
-        const accountNumber = profileData.account_number.replace(/\s/g, '');
-        if (profileData.account_number && (!/^\d{1,10}$/.test(accountNumber))) {
-            newErrors.account_number = 'Account number must be 1-10 digits';
-        }
-
-        // Date validation
-        if (profileData.date_of_birth) {
+        // Date of birth validation
+        if (!profileData.date_of_birth) {
+            newErrors.date_of_birth = 'Date of birth is required';
+        } else {
             const birthDate = new Date(profileData.date_of_birth);
             const today = new Date();
             const age = today.getFullYear() - birthDate.getFullYear();
@@ -305,6 +263,64 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
             if (age < 16 || age > 100) {
                 newErrors.date_of_birth = 'Please enter a valid date of birth';
             }
+        }
+
+        // Address validation
+        if (!profileData.address.trim()) {
+            newErrors.address = 'Address is required';
+        }
+
+        // Phone validation
+        if (!profileData.phone.trim()) {
+            newErrors.phone = 'Phone number is required';
+        } else if (!/^\+?[\d\s\-\(\)]{10,}$/.test(profileData.phone)) {
+            newErrors.phone = 'Please enter a valid phone number';
+        }
+
+        // TFN validation
+        const tfn = profileData.tfn.replace(/\s/g, '');
+        if (!tfn) {
+            newErrors.tfn = 'Tax File Number is required';
+        } else if (!/^\d{9}$/.test(tfn)) {
+            newErrors.tfn = 'TFN must be exactly 9 digits';
+        }
+
+        // Bank details validation
+        if (!profileData.bank_name.trim()) {
+            newErrors.bank_name = 'Bank name is required';
+        }
+
+        if (!profileData.account_name.trim()) {
+            newErrors.account_name = 'Account name is required';
+        }
+
+        // BSB validation
+        const bsb = profileData.bsb.replace(/[\s\-]/g, '');
+        if (!bsb) {
+            newErrors.bsb = 'BSB is required';
+        } else if (!/^\d{6}$/.test(bsb)) {
+            newErrors.bsb = 'BSB must be exactly 6 digits';
+        }
+
+        // Account number validation
+        const accountNumber = profileData.account_number.replace(/\s/g, '');
+        if (!accountNumber) {
+            newErrors.account_number = 'Account number is required';
+        } else if (!/^\d{1,10}$/.test(accountNumber)) {
+            newErrors.account_number = 'Account number must be 1-10 digits';
+        }
+
+        // Emergency contact validation
+        if (!profileData.emergency_contact_first_name.trim()) {
+            newErrors.emergency_contact_first_name = 'Emergency contact first name is required';
+        }
+
+        if (!profileData.emergency_contact_number.trim()) {
+            newErrors.emergency_contact_number = 'Emergency contact number is required';
+        }
+
+        if (!profileData.emergency_contact_relationship) {
+            newErrors.emergency_contact_relationship = 'Emergency contact relationship is required';
         }
 
         setErrors(newErrors);
@@ -471,65 +487,78 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Basic Information */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <div className="flex items-center space-x-3 mb-6">
-                        <User className="w-6 h-6 text-emerald-600" />
-                        <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
-                        <span className="text-red-500 text-sm">* Required</span>
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center space-x-3">
+                            <User className="w-6 h-6 text-emerald-600" />
+                            <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+                        </div>
+                        <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-1">
+                            <span className="text-green-700 text-sm font-medium">✓ From your account</span>
+                        </div>
+                    </div>
+
+                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-start space-x-3">
+                            <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                            <div>
+                                <h4 className="text-blue-800 font-medium">Account Information</h4>
+                                <p className="text-blue-700 text-sm mt-1">
+                                    Your basic details are automatically imported from your employee account. Need to update them? Contact HR.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                First Name *
+                                First Name
+                                <span className="text-green-600 ml-2 text-xs">✓ Auto-filled</span>
                             </label>
                             <input
                                 type="text"
                                 value={profileData.first_name}
-                                onChange={(e) => handleInputChange('first_name', e.target.value)}
-                                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${errors.first_name ? 'border-red-300' : 'border-gray-300'
-                                    }`}
-                                placeholder="Enter your first name"
+                                readOnly
+                                disabled
+                                className="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-700 rounded-xl cursor-not-allowed"
+                                placeholder="From your account"
                             />
-                            {errors.first_name && (
-                                <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>
-                            )}
+                            <p className="mt-1 text-xs text-gray-500">This information comes from your employee account</p>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Last Name *
+                                Last Name
+                                <span className="text-green-600 ml-2 text-xs">✓ Auto-filled</span>
                             </label>
                             <input
                                 type="text"
                                 value={profileData.last_name}
-                                onChange={(e) => handleInputChange('last_name', e.target.value)}
-                                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${errors.last_name ? 'border-red-300' : 'border-gray-300'
-                                    }`}
-                                placeholder="Enter your last name"
+                                readOnly
+                                disabled
+                                className="w-full px-4 py-3 border border-gray-200 bg-gray-50 text-gray-700 rounded-xl cursor-not-allowed"
+                                placeholder="From your account"
                             />
-                            {errors.last_name && (
-                                <p className="mt-1 text-sm text-red-600">{errors.last_name}</p>
-                            )}
+                            <p className="mt-1 text-xs text-gray-500">This information comes from your employee account</p>
                         </div>
 
-                        <div>
+                        <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Email Address *
+                                Work Email
+                                <span className="text-green-600 ml-2 text-xs">✓ Auto-filled</span>
                             </label>
                             <div className="relative">
                                 <input
                                     type="email"
                                     value={profileData.email}
-                                    onChange={(e) => handleInputChange('email', e.target.value)}
-                                    className={`w-full px-4 py-3 pl-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${errors.email ? 'border-red-300' : 'border-gray-300'
-                                        }`}
-                                    placeholder="your.email@casacommunity.com.au"
+                                    readOnly
+                                    disabled
+                                    className="w-full px-4 py-3 pl-12 border border-gray-200 bg-gray-50 text-gray-700 rounded-xl cursor-not-allowed"
+                                    placeholder="From your account"
                                 />
                                 <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
                             </div>
-                            {errors.email && (
-                                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                            )}
+                            <p className="mt-1 text-xs text-gray-500">This information comes from your employee account</p>
                         </div>
 
                         <div>
@@ -538,7 +567,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             </label>
                             <div className="relative">
                                 <input
-                                    title='relative'
+                                    title='dob'
                                     type="date"
                                     value={profileData.date_of_birth}
                                     onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
@@ -549,26 +578,6 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             </div>
                             {errors.date_of_birth && (
                                 <p className="mt-1 text-sm text-red-600">{errors.date_of_birth}</p>
-                            )}
-                        </div>
-
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Address *
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={profileData.address}
-                                    onChange={(e) => handleInputChange('address', e.target.value)}
-                                    className={`w-full px-4 py-3 pl-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${errors.address ? 'border-red-300' : 'border-gray-300'
-                                        }`}
-                                    placeholder="123 Main Street, Adelaide SA 5000"
-                                />
-                                <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                            </div>
-                            {errors.address && (
-                                <p className="mt-1 text-sm text-red-600">{errors.address}</p>
                             )}
                         </div>
 
@@ -592,7 +601,27 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             )}
                         </div>
 
-                        <div>
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Address *
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={profileData.address}
+                                    onChange={(e) => handleInputChange('address', e.target.value)}
+                                    className={`w-full px-4 py-3 pl-12 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors ${errors.address ? 'border-red-300' : 'border-gray-300'
+                                        }`}
+                                    placeholder="123 Main Street, Adelaide SA 5000"
+                                />
+                                <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                            </div>
+                            {errors.address && (
+                                <p className="mt-1 text-sm text-red-600">{errors.address}</p>
+                            )}
+                        </div>
+
+                        <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Tax File Number (TFN) *
                             </label>
@@ -618,7 +647,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             {errors.tfn && (
                                 <p className="mt-1 text-sm text-red-600">{errors.tfn}</p>
                             )}
-                            <p className="mt-1 text-xs text-gray-500">9 digits only</p>
+                            <p className="mt-1 text-xs text-gray-500">9 digits only • Required for payroll</p>
                         </div>
                     </div>
                 </div>
