@@ -172,7 +172,7 @@ const EmployeeDashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        {/* <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-gray-600">Recent Activities</p>
@@ -180,7 +180,7 @@ const EmployeeDashboard: React.FC = () => {
                                 </div>
                                 <Clock className="w-8 h-8 text-purple-500" />
                             </div>
-                        </div>
+                        </div> */}
                     </div>
 
                     {/* Quick Actions */}

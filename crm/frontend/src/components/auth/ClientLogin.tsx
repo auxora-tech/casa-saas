@@ -65,6 +65,7 @@ const ClientLogin: React.FC = () => {
 
         try {
             await login(formData, 'client');
+            localStorage.setItem('user_wok_email', JSON.stringify(formData.work_email))
             navigate('/client/dashboard/');
         } catch (error: any) {
             console.error('Login error:', error);

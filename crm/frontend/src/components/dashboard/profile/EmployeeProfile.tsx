@@ -185,15 +185,17 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
             setLoading(true);
             try {
                 // Get user data from token or storage
-                const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
-                console.log(userData);
+                // const userData = JSON.parse(localStorage.getItem('user_data') || '{}');
+                // console.log(userData);
 
                 setProfileData(prev => ({
                     ...prev,
-                    first_name: userData.first_name || '',
-                    last_name: userData.last_name || '',
-                    email: userData.email || userData.work_email || '',
+                    first_name: JSON.parse(localStorage.getItem('user_first_name') || ''),
+                    last_name: JSON.parse(localStorage.getItem('user_last_name') || ''),
+                    email: JSON.parse(localStorage.getItem('user_work_email') || ''),
                 }));
+
+                console.log(profileData)
 
                 // Try to load existing profile
                 // const profile = await employeeService.getProfile();

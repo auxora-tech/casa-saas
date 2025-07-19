@@ -190,6 +190,8 @@ const ClientSignup: React.FC = () => {
             localStorage.setItem('access_token', signupResponse.tokens.access);
             localStorage.setItem('refresh_token', signupResponse.tokens.refresh);
             localStorage.setItem('user_type', 'client');
+            localStorage.setItem('user_first_name', JSON.stringify(formData.first_name))
+            localStorage.setItem('user_last_name', JSON.stringify(formData.last_name))
 
             setSignupSuccess(true);
 
