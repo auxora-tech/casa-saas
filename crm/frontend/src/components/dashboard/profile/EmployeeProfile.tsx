@@ -561,7 +561,7 @@ const EmployeeProfile: React.FC<{ onBack?: () => void; onProfileComplete?: () =>
                             <div className="relative">
                                 <input
                                     type="email"
-                                    value={profileData.work_email}
+                                    value={profileData['work_email']}
                                     readOnly
                                     disabled
                                     className="w-full px-4 py-3 pl-12 border border-gray-200 bg-gray-50 text-gray-700 rounded-xl cursor-not-allowed"
